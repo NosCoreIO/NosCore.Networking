@@ -6,7 +6,9 @@
 
 using System.Linq;
 using System.Net;
+using Castle.Core.Logging;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using NodaTime;
@@ -24,7 +26,7 @@ namespace NosCore.Networking.Tests
             var ctx = new Mock<IChannelHandlerContext>();
             ctx.SetupGet(x => x.Channel.RemoteAddress).Returns(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 123));
             var clock = new FakeClock(Instant.FromUtc(2022, 01, 01, 01, 01, 1));
-            var spamFilter = new SpamRequestFilter(clock);
+            var spamFilter = new SpamRequestFilter(clock, new Mock<ILogger<SpamRequestFilter>>().Object);
             var output = spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
             Assert.IsTrue(new byte[] { 1, 2, 3 }.SequenceEqual(output));
         }
@@ -39,7 +41,7 @@ namespace NosCore.Networking.Tests
             ctx2.SetupGet(x => x.Channel.RemoteAddress).Returns(new IPEndPoint(IPAddress.Parse("127.0.0.2"), 123));
 
             var clock = new FakeClock(Instant.FromUtc(2022, 01, 01, 01, 01, 1));
-            var spamFilter = new SpamRequestFilter(clock);
+            var spamFilter = new SpamRequestFilter(clock, new Mock<ILogger<SpamRequestFilter>>().Object);
             spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
             var output = spamFilter.Filter(ctx2.Object, new byte[] { 1, 2, 3 });
             Assert.IsTrue(new byte[] { 1, 2, 3 }.SequenceEqual(output));
@@ -52,7 +54,7 @@ namespace NosCore.Networking.Tests
             ctx.SetupGet(x => x.Channel.RemoteAddress).Returns(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 123));
 
             var clock = new FakeClock(Instant.FromUtc(2022, 01, 01, 01, 01, 1));
-            var spamFilter = new SpamRequestFilter(clock);
+            var spamFilter = new SpamRequestFilter(clock, new Mock<ILogger<SpamRequestFilter>>().Object);
             spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
 
             var output = spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
@@ -66,7 +68,7 @@ namespace NosCore.Networking.Tests
             ctx.SetupGet(x => x.Channel.RemoteAddress).Returns(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 123));
 
             var clock = new FakeClock(Instant.FromUtc(2022, 01, 01, 01, 01, 1));
-            var spamFilter = new SpamRequestFilter(clock);
+            var spamFilter = new SpamRequestFilter(clock, new Mock<ILogger<SpamRequestFilter>>().Object);
             spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
             clock.AdvanceSeconds(1);
             var output = spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
