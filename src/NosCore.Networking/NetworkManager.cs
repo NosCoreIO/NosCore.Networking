@@ -19,11 +19,11 @@ namespace NosCore.Networking
     public class NetworkManager
     {
         private readonly IOptions<ServerConfiguration> _configuration;
-        private readonly ILogger _logger;
+        private readonly ILogger<NetworkManager> _logger;
         private readonly Func<ISocketChannel, IPipelineFactory> _pipelineFactory;
 
         public NetworkManager(IOptions<ServerConfiguration> configuration,
-            Func<ISocketChannel, IPipelineFactory> pipelineFactory, ILogger logger)
+            Func<ISocketChannel, IPipelineFactory> pipelineFactory, ILogger<NetworkManager> logger)
         {
             _configuration = configuration;
             _pipelineFactory = pipelineFactory;

@@ -11,6 +11,7 @@ using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
+using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
@@ -18,10 +19,10 @@ namespace NosCore.Networking.Encoding
     public class LoginDecoder : MessageToMessageDecoder<IByteBuffer>
     {
         private readonly IDeserializer _deserializer;
-        private readonly ILogger _logger;
+        private readonly ILogger<LoginDecoder> _logger;
         private readonly ISessionRefHolder _sessionRefHolder;
 
-        public LoginDecoder(ILogger logger, IDeserializer deserializer, ISessionRefHolder sessionRefHolder)
+        public LoginDecoder(ILogger<LoginDecoder> logger, IDeserializer deserializer, ISessionRefHolder sessionRefHolder)
         {
             _logger = logger;
             _deserializer = deserializer;

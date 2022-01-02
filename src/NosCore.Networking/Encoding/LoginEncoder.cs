@@ -12,17 +12,18 @@ using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Extensions;
+using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
 {
     public class LoginEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<LoginEncoder> _logger;
         private readonly ISerializer _serializer;
         private readonly ISessionRefHolder _sessionRefHolder;
 
-        public LoginEncoder(ILogger logger, ISerializer serializer, ISessionRefHolder sessionRefHolder)
+        public LoginEncoder(ILogger<LoginEncoder> logger, ISerializer serializer, ISessionRefHolder sessionRefHolder)
         {
             _logger = logger;
             _serializer = serializer;

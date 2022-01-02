@@ -13,6 +13,7 @@ using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Extensions;
+using NosCore.Networking.SessionRef;
 using NosCore.Packets;
 using NosCore.Packets.Interfaces;
 using NosCore.Shared.Enumerations;
@@ -22,12 +23,12 @@ namespace NosCore.Networking.Encoding
     public class WorldDecoder : MessageToMessageDecoder<IByteBuffer>
     {
         private readonly IDeserializer _deserializer;
-        private readonly ILogger _logger;
+        private readonly ILogger<WorldDecoder> _logger;
         private RegionType _region;
         private int _sessionId;
         private readonly ISessionRefHolder _sessionRefHolder;
 
-        public WorldDecoder(IDeserializer deserializer, ILogger logger, ISessionRefHolder sessionRefHolder)
+        public WorldDecoder(IDeserializer deserializer, ILogger<WorldDecoder> logger, ISessionRefHolder sessionRefHolder)
         {
             _deserializer = deserializer;
             _logger = logger;
