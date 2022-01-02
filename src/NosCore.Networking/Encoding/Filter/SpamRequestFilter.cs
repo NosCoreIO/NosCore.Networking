@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 
 namespace NosCore.Networking.Encoding.Filter
@@ -17,9 +18,12 @@ namespace NosCore.Networking.Encoding.Filter
         private readonly Dictionary<EndPoint, Instant> _connectionsByIp = new();
         private readonly TimeSpan _timeBetweenConnection = TimeSpan.FromMilliseconds(1000);
         private readonly IClock _clock;
-        public SpamRequestFilter(IClock clock)
+        private readonly ILogger<SpamRequestFilter> _logger;
+
+        public SpamRequestFilter(IClock clock, ILogger<SpamRequestFilter> logger)
         {
             _clock = clock;
+            _logger = logger;
         }
 
         public override byte[]? Filter(IChannelHandlerContext context, Span<byte> message)
@@ -28,6 +32,7 @@ namespace NosCore.Networking.Encoding.Filter
             {
                 if (date.Plus(Duration.FromTimeSpan(_timeBetweenConnection)) > _clock.GetCurrentInstant())
                 {
+                    _logger.LogWarning("{RemoteAddress} blocked by spam filter", context.Channel.RemoteAddress);
                     return null;
                 }
             }

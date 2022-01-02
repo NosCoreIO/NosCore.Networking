@@ -45,6 +45,7 @@ namespace NosCore.Networking
                     .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                         _pipelineFactory(channel).CreatePipeline()));
 
+                _logger.LogInformation("Listening to {Port}", _configuration.Value.Port);
                 var bootstrapChannel = await bootstrap.BindAsync(_configuration.Value.Port).ConfigureAwait(false);
                 Console.CancelKeyPress += ((s, a) =>
                 {

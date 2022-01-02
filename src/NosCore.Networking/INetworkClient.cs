@@ -6,11 +6,13 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DotNetty.Transport.Channels;
+using DotNetty.Transport.Channels.Sockets;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking
 {
-    public interface INetworkClient
+    public interface INetworkClient : IChannelHandler
     {
         int SessionId { get; set; }
 
@@ -19,5 +21,7 @@ namespace NosCore.Networking
         Task SendPacketAsync(IPacket packet);
 
         Task SendPacketsAsync(IEnumerable<IPacket> packets);
+
+        void RegisterChannel(ISocketChannel channel);
     }
 }
