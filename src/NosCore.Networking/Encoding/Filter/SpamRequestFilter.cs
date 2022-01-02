@@ -19,6 +19,7 @@ namespace NosCore.Networking.Encoding.Filter
         private readonly TimeSpan _timeBetweenConnection = TimeSpan.FromMilliseconds(1000);
         private readonly IClock _clock;
         private readonly ILogger<SpamRequestFilter> _logger;
+        public override bool IsSharable => true;
 
         public SpamRequestFilter(IClock clock, ILogger<SpamRequestFilter> logger)
         {
