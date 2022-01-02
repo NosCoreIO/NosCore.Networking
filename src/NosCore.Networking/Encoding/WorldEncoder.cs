@@ -11,6 +11,7 @@ using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using NosCore.Networking.Extensions;
+using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding

@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 
-namespace NosCore.Networking
+namespace NosCore.Networking.SessionRef
 {
     public interface ISessionRefHolder : IDictionary<string, RegionTypeMapping>
     {

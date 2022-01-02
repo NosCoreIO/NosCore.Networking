@@ -19,6 +19,7 @@
 
 using System.Collections.Concurrent;
 using NosCore.Networking;
+using NosCore.Networking.SessionRef;
 
 namespace NosCore.Core.Networking;
 
