@@ -5,14 +5,13 @@
 // -----------------------------------
 
 using System.Collections.Concurrent;
-using DotNetty.Transport.Channels.Groups;
 using NosCore.Packets.Interfaces;
 
-namespace NosCore.Networking
+namespace NosCore.Networking.SessionGroup
 {
     public interface IBroadcastable
     {
-        IChannelGroup Sessions { get; set; }
+        ISessionGroup Sessions { get; set; }
         ConcurrentQueue<IPacket> LastPackets { get; }
         short MaxPacketsBuffer { get; }
     }

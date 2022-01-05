@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DotNetty.Transport.Channels.Groups;
+using NosCore.Networking.SessionGroup;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking
@@ -40,11 +41,11 @@ namespace NosCore.Networking
 
                 if (matcher == null)
                 {
-                    await channelGroup.Sessions.WriteAndFlushAsync(packetDefinitions).ConfigureAwait(false);
+                    await channelGroup.Sessions.Broadcast(packetDefinitions).ConfigureAwait(false);
                 }
                 else
                 {
-                    await channelGroup.Sessions.WriteAndFlushAsync(packetDefinitions, matcher).ConfigureAwait(false);
+                    await channelGroup.Sessions.Broadcast(packetDefinitions, matcher).ConfigureAwait(false);
                 }
             }
         }
