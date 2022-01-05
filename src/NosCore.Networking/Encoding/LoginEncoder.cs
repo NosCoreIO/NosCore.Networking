@@ -12,8 +12,10 @@ using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Extensions;
+using NosCore.Networking.Resource;
 using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
+using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
@@ -22,12 +24,14 @@ namespace NosCore.Networking.Encoding
         private readonly ILogger<LoginEncoder> _logger;
         private readonly ISerializer _serializer;
         private readonly ISessionRefHolder _sessionRefHolder;
+        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
-        public LoginEncoder(ILogger<LoginEncoder> logger, ISerializer serializer, ISessionRefHolder sessionRefHolder)
+        public LoginEncoder(ILogger<LoginEncoder> logger, ISerializer serializer, ISessionRefHolder sessionRefHolder, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _logger = logger;
             _serializer = serializer;
             _sessionRefHolder = sessionRefHolder;
+            _logLanguage = logLanguage;
         }
 
         protected override void Encode(IChannelHandlerContext context, IEnumerable<IPacket> message,
@@ -52,7 +56,7 @@ namespace NosCore.Networking.Encoding
             catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                _logger.LogError(ex, "Encode Error: {0}", ex.Message);
+                _logger.LogError(ex, _logLanguage[LogLanguageKey.ENCODE_ERROR], ex.Message);
             }
         }
     }

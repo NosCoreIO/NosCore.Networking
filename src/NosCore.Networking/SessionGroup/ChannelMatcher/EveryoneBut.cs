@@ -7,7 +7,7 @@
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Groups;
 
-namespace NosCore.Networking.ChannelMatcher
+namespace NosCore.Networking.SessionGroup.ChannelMatcher
 {
     public class EveryoneBut : IChannelMatcher
     {
