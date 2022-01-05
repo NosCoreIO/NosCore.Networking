@@ -12,7 +12,9 @@ using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NosCore.Networking.Resource;
 using NosCore.Shared.Configuration;
+using NosCore.Shared.I18N;
 
 namespace NosCore.Networking
 {
@@ -23,14 +25,17 @@ namespace NosCore.Networking
         private readonly Func<ISocketChannel, IPipelineFactory> _pipelineFactory;
 
         public NetworkManager(IOptions<ServerConfiguration> configuration,
-            Func<ISocketChannel, IPipelineFactory> pipelineFactory, ILogger<NetworkManager> logger)
+            Func<ISocketChannel, IPipelineFactory> pipelineFactory, ILogger<NetworkManager> logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _configuration = configuration;
             _pipelineFactory = pipelineFactory;
             _logger = logger;
+            _logLanguage = logLanguage;
         }
 
         private static readonly AutoResetEvent ClosingEvent = new AutoResetEvent(false);
+        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
+
         public async Task RunServerAsync()
         {
             var bossGroup = new MultithreadEventLoopGroup(1);
@@ -45,7 +50,7 @@ namespace NosCore.Networking
                     .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
                         _pipelineFactory(channel).CreatePipeline()));
 
-                _logger.LogInformation("Listening to {Port}", _configuration.Value.Port);
+                _logger.LogInformation(_logLanguage[LogLanguageKey.LISTENING_PORT], _configuration.Value.Port);
                 var bootstrapChannel = await bootstrap.BindAsync(_configuration.Value.Port).ConfigureAwait(false);
                 Console.CancelKeyPress += ((s, a) =>
                 {

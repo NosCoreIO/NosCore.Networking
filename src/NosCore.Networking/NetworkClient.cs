@@ -12,7 +12,9 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using NosCore.Networking.Resource;
 using NosCore.Packets.Interfaces;
+using NosCore.Shared.I18N;
 using Serilog;
 
 namespace NosCore.Networking
@@ -21,11 +23,13 @@ namespace NosCore.Networking
     {
         private const short MaxPacketsBuffer = 50;
         private readonly ILogger _logger;
+        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
-        public NetworkClient(ILogger logger)
+        public NetworkClient(ILogger logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _logger = logger;
             LastPackets = new ConcurrentQueue<IPacket?>();
+            _logLanguage = logLanguage;
         }
 
         public IChannel? Channel { get; private set; }
@@ -39,7 +43,7 @@ namespace NosCore.Networking
 
         public async Task DisconnectAsync()
         {
-            _logger.Information("Forced disconnection of the client {SessionId}.",
+            _logger.Information(_logLanguage[LogLanguageKey.FORCED_DISCONNECTION],
                 SessionId);
             if (Channel != null)
             {

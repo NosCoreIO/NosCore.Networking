@@ -13,10 +13,12 @@ using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Extensions;
+using NosCore.Networking.Resource;
 using NosCore.Networking.SessionRef;
 using NosCore.Packets;
 using NosCore.Packets.Interfaces;
 using NosCore.Shared.Enumerations;
+using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
@@ -27,12 +29,14 @@ namespace NosCore.Networking.Encoding
         private RegionType _region;
         private int _sessionId;
         private readonly ISessionRefHolder _sessionRefHolder;
+        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
-        public WorldDecoder(IDeserializer deserializer, ILogger<WorldDecoder> logger, ISessionRefHolder sessionRefHolder)
+        public WorldDecoder(IDeserializer deserializer, ILogger<WorldDecoder> logger, ISessionRefHolder sessionRefHolder, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _deserializer = deserializer;
             _logger = logger;
             _sessionRefHolder = sessionRefHolder;
+            _logLanguage = logLanguage;
         }
 
         private string DecryptPrivate(string str)
@@ -186,12 +190,12 @@ namespace NosCore.Networking.Encoding
 
                 if (!int.TryParse(pack.Header, out _sessionId))
                 {
-                    _logger.LogError("An error occured while decoding packet. ClientId = {SessionId}", mapper.SessionId);
+                    _logger.LogError(_logLanguage[LogLanguageKey.ERROR_SESSIONID], mapper.SessionId);
                     return;
                 }
 
                 _sessionRefHolder[context.Channel.Id.AsLongText()].SessionId = _sessionId;
-                _logger.LogInformation("New client connected. ClientId = {SessionId}", mapper.SessionId);
+                _logger.LogInformation(_logLanguage[LogLanguageKey.CLIENT_CONNECTED], mapper.SessionId);
                 temp.Add(pack);
                 if (endofPacket.Length == 0)
                 {
@@ -255,7 +259,7 @@ namespace NosCore.Networking.Encoding
                        var packet = _deserializer.Deserialize(decrypt);
                        if (!packet.IsValid)
                        {
-                           _logger.LogError("Packet with Header {Header} is corrupt or PacketDefinition is invalid. Content: {Content}",
+                           _logger.LogError(_logLanguage[LogLanguageKey.CORRUPTED_PACKET],
                                packet.Header, decrypt);
                        }
 
@@ -265,7 +269,7 @@ namespace NosCore.Networking.Encoding
                    catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
                    {
-                       _logger.LogError("Decoding error {Data}",
+                       _logger.LogError(_logLanguage[LogLanguageKey.ERROR_DECODING],
                            ex.Data["Packet"]);
                        ushort? keepalive = null;
                        if (ushort.TryParse(ex.Data["Packet"]?.ToString()?.Split(" ")[0], out var kpalive))

@@ -11,8 +11,10 @@ using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
+using NosCore.Networking.Resource;
 using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
+using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
@@ -21,12 +23,14 @@ namespace NosCore.Networking.Encoding
         private readonly IDeserializer _deserializer;
         private readonly ILogger<LoginDecoder> _logger;
         private readonly ISessionRefHolder _sessionRefHolder;
+        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
-        public LoginDecoder(ILogger<LoginDecoder> logger, IDeserializer deserializer, ISessionRefHolder sessionRefHolder)
+        public LoginDecoder(ILogger<LoginDecoder> logger, IDeserializer deserializer, ISessionRefHolder sessionRefHolder, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _logger = logger;
             _deserializer = deserializer;
             _sessionRefHolder = sessionRefHolder;
+            _logLanguage = logLanguage;
         }
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
@@ -39,7 +43,7 @@ namespace NosCore.Networking.Encoding
                 {
                     _sessionRefHolder[context.Channel.Id.AsLongText()].SessionId =
                         _sessionRefHolder.GenerateSessionId();
-                    _logger.LogInformation("New client connected. ClientId = {SessionId}",
+                    _logger.LogInformation(_logLanguage[LogLanguageKey.CLIENT_CONNECTED],
                         mapper.SessionId);
                 }
 
@@ -58,14 +62,14 @@ namespace NosCore.Networking.Encoding
                 }
                 else if (!des.IsValid)
                 {
-                    _logger.LogError("Packet with Header {des} is corrupt or PacketDefinition is invalid. Content: {PacketContent}", des.Header, decrypt);
+                    _logger.LogError(_logLanguage[LogLanguageKey.CORRUPTED_PACKET], des.Header, decrypt);
                 }
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                _logger.LogError("Decoding error {0}", ex);
+                _logger.LogError(_logLanguage[LogLanguageKey.ERROR_DECODING], ex);
             }
         }
     }
