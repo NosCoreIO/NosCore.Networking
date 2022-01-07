@@ -28,7 +28,7 @@
 		<PackageReference Include="DotNetty.Common" Version="0.7.1" />
 		<PackageReference Include="DotNetty.Transport" Version="0.7.0" />
 		<PackageReference Include="NodaTime" Version="3.0.9" />
-		<PackageReference Include="NosCore.Packets" Version="7.7.0" />
+		<PackageReference Include="NosCore.Packets" Version="8.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
