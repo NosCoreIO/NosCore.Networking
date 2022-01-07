@@ -19,7 +19,7 @@ using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
-    public class LoginEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>
+    public class LoginEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>, IEncoder
     {
         private readonly ILogger<LoginEncoder> _logger;
         private readonly ISerializer _serializer;
@@ -37,12 +37,17 @@ namespace NosCore.Networking.Encoding
         protected override void Encode(IChannelHandlerContext context, IEnumerable<IPacket> message,
             List<object> output)
         {
+            output.Add(Unpooled.WrappedBuffer(Encode(context.Channel.Id.AsLongText(), message)));
+        }
+
+        public byte[] Encode(string clientSessionId, IEnumerable<IPacket> packets)
+        {
             try
             {
-                output.Add(Unpooled.WrappedBuffer(message.SelectMany(packet =>
+                return packets.SelectMany(packet =>
                 {
                     var packetString = _serializer.Serialize(packet);
-                    var tmp = _sessionRefHolder[context.Channel.Id.AsLongText()].RegionType.GetEncoding()!.GetBytes($"{packetString} ");
+                    var tmp = _sessionRefHolder[clientSessionId].RegionType.GetEncoding()!.GetBytes($"{packetString} ");
                     for (var i = 0; i < packetString.Length; i++)
                     {
                         tmp[i] = Convert.ToByte(tmp[i] + 15);
@@ -50,7 +55,7 @@ namespace NosCore.Networking.Encoding
 
                     tmp[^1] = 25;
                     return tmp.Length == 0 ? new byte[] { 0xFF } : tmp;
-                }).ToArray()));
+                }).ToArray();
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
@@ -58,6 +63,8 @@ namespace NosCore.Networking.Encoding
             {
                 _logger.LogError(ex, _logLanguage[LogLanguageKey.ENCODE_ERROR], ex.Message);
             }
+
+            return Array.Empty<byte>();
         }
     }
 }
