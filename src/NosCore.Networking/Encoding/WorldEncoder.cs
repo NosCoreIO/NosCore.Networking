@@ -16,7 +16,7 @@ using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
 {
-    public class WorldEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>
+    public class WorldEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>, IEncoder
     {
         private readonly ISerializer _serializer;
         private readonly ISessionRefHolder _sessionRefHolder;
@@ -30,9 +30,14 @@ namespace NosCore.Networking.Encoding
         protected override void Encode(IChannelHandlerContext context, IEnumerable<IPacket> message,
             List<object> output)
         {
-            output.Add(Unpooled.WrappedBuffer(message.SelectMany(packet =>
+            output.Add(Unpooled.WrappedBuffer(Encode(context.Channel.Id.AsLongText(), message)));
+        }
+
+        public byte[] Encode(string clientSessionId, IEnumerable<IPacket> packets)
+        {
+            return packets.SelectMany(packet =>
             {
-                var region = _sessionRefHolder[context.Channel.Id.AsLongText()].RegionType.GetEncoding();
+                var region = _sessionRefHolder[clientSessionId].RegionType.GetEncoding();
                 var strBytes = region!.GetBytes(_serializer.Serialize(packet)).AsSpan();
                 var bytesLength = strBytes.Length;
 
@@ -52,7 +57,8 @@ namespace NosCore.Networking.Encoding
 
                 encryptedData[^1] = 0xFF;
                 return encryptedData;
-            }).ToArray()));
+            }).ToArray();
         }
+
     }
 }

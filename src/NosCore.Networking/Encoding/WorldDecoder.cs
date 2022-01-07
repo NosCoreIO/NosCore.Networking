@@ -22,7 +22,7 @@ using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
-    public class WorldDecoder : MessageToMessageDecoder<IByteBuffer>
+    public class WorldDecoder : MessageToMessageDecoder<IByteBuffer>, IDecoder
     {
         private readonly IDeserializer _deserializer;
         private readonly ILogger<WorldDecoder> _logger;
@@ -174,27 +174,38 @@ namespace NosCore.Networking.Encoding
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
         {
+            var packets = Decode(context.Channel.Id.AsLongText(),
+                ((Span<byte>)message.Array).Slice(message.ArrayOffset, message.ReadableBytes));
+  
+            if (packets.Any())
+            {
+                output.Add(packets);
+            }
+        }
+
+        public IEnumerable<IPacket> Decode(string clientSessionId, Span<byte> message)
+        {
             var continueToDecode = true;
             var temp = new List<IPacket>();
             var encryptedString = "";
-            var mapper = _sessionRefHolder[context.Channel.Id.AsLongText()];
+            var mapper = _sessionRefHolder[clientSessionId];
             _region = mapper.RegionType;
             _sessionId = mapper.SessionId;
-            var str = ((Span<byte>)message.Array).Slice(message.ArrayOffset, message.ReadableBytes).ToArray();
+            var str = message.ToArray();
             if (_sessionId == 0)
             {
                 if (_deserializer.Deserialize(DecryptCustomParameter(str, out var endofPacket)) is not UnresolvedPacket pack)
                 {
-                    throw new ArgumentNullException(nameof(context));
+                    throw new ArgumentNullException(nameof(clientSessionId));
                 }
 
                 if (!int.TryParse(pack.Header, out _sessionId))
                 {
                     _logger.LogError(_logLanguage[LogLanguageKey.ERROR_SESSIONID], mapper.SessionId);
-                    return;
+                    return Enumerable.Empty<IPacket>();
                 }
 
-                _sessionRefHolder[context.Channel.Id.AsLongText()].SessionId = _sessionId;
+                _sessionRefHolder[clientSessionId].SessionId = _sessionId;
                 _logger.LogInformation(_logLanguage[LogLanguageKey.CLIENT_CONNECTED], mapper.SessionId);
                 temp.Add(pack);
                 if (endofPacket.Length == 0)
@@ -252,40 +263,37 @@ namespace NosCore.Networking.Encoding
                 }
 
                 temp.AddRange(encryptedString.Split((char)0xFF, StringSplitOptions.RemoveEmptyEntries).Select(p =>
-               {
-                   try
-                   {
-                       var decrypt = DecryptPrivate(p);
-                       var packet = _deserializer.Deserialize(decrypt);
-                       if (!packet.IsValid)
-                       {
-                           _logger.LogError(_logLanguage[LogLanguageKey.CORRUPTED_PACKET],
-                               packet.Header, decrypt);
-                       }
+                {
+                    try
+                    {
+                        var decrypt = DecryptPrivate(p);
+                        var packet = _deserializer.Deserialize(decrypt);
+                        if (!packet.IsValid)
+                        {
+                            _logger.LogError(_logLanguage[LogLanguageKey.CORRUPTED_PACKET],
+                                packet.Header, decrypt);
+                        }
 
-                       return packet;
-                   }
+                        return packet;
+                    }
 #pragma warning disable CA1031 // Do not catch general exception types
-                   catch (Exception ex)
+                    catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
-                   {
-                       _logger.LogError(_logLanguage[LogLanguageKey.ERROR_DECODING],
-                           ex.Data["Packet"]);
-                       ushort? keepalive = null;
-                       if (ushort.TryParse(ex.Data["Packet"]?.ToString()?.Split(" ")[0], out var kpalive))
-                       {
-                           keepalive = kpalive;
-                       }
-                       return new UnresolvedPacket
-                       { KeepAliveId = keepalive, Header = "0" };
-                   }
-               }));
+                    {
+                        _logger.LogError(_logLanguage[LogLanguageKey.ERROR_DECODING],
+                            ex.Data["Packet"]);
+                        ushort? keepalive = null;
+                        if (ushort.TryParse(ex.Data["Packet"]?.ToString()?.Split(" ")[0], out var kpalive))
+                        {
+                            keepalive = kpalive;
+                        }
+                        return new UnresolvedPacket
+                        { KeepAliveId = keepalive, Header = "0" };
+                    }
+                }));
             }
 
-            if (temp.Count > 0)
-            {
-                output.Add(temp);
-            }
+            return temp;
         }
     }
 }

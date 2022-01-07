@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using DotNetty.Buffers;
 using DotNetty.Codecs;
@@ -18,7 +19,7 @@ using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
-    public class LoginDecoder : MessageToMessageDecoder<IByteBuffer>
+    public class LoginDecoder : MessageToMessageDecoder<IByteBuffer>, IDecoder
     {
         private readonly IDeserializer _deserializer;
         private readonly ILogger<LoginDecoder> _logger;
@@ -33,22 +34,21 @@ namespace NosCore.Networking.Encoding
             _logLanguage = logLanguage;
         }
 
-        protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
+        public IEnumerable<IPacket> Decode(string clientSessionId, Span<byte> message)
         {
             try
             {
                 var decryptedPacket = new StringBuilder();
-                var mapper = _sessionRefHolder[context.Channel.Id.AsLongText()];
+                var mapper = _sessionRefHolder[clientSessionId];
                 if (mapper.SessionId == 0)
                 {
-                    _sessionRefHolder[context.Channel.Id.AsLongText()].SessionId =
+                    _sessionRefHolder[clientSessionId].SessionId =
                         _sessionRefHolder.GenerateSessionId();
                     _logger.LogInformation(_logLanguage[LogLanguageKey.CLIENT_CONNECTED],
                         mapper.SessionId);
                 }
 
-                foreach (var character in ((Span<byte>)message.Array).Slice(message.ArrayOffset, message.ReadableBytes)
-                )
+                foreach (var character in message)
                 {
                     decryptedPacket.Append(character > 14 ? Convert.ToChar((character - 15) ^ 195)
                         : Convert.ToChar((256 - (15 - character)) ^ 195));
@@ -58,7 +58,7 @@ namespace NosCore.Networking.Encoding
                 var des = _deserializer.Deserialize(decrypt);
                 if (des.IsValid)
                 {
-                    output.Add(new[] { des });
+                    return new[] { des };
                 }
                 else if (!des.IsValid)
                 {
@@ -70,6 +70,19 @@ namespace NosCore.Networking.Encoding
 #pragma warning restore CA1031 // Do not catch general exception types
             {
                 _logger.LogError(_logLanguage[LogLanguageKey.ERROR_DECODING], ex);
+            }
+
+            return Array.Empty<IPacket>();
+        }
+
+        protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
+        {
+            var packets = Decode(context.Channel.Id.AsLongText(),
+                ((Span<byte>)message.Array).Slice(message.ArrayOffset, message.ReadableBytes));
+
+            if (packets.Any())
+            {
+                output.Add(packets);
             }
         }
     }

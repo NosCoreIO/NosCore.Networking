@@ -9,6 +9,7 @@ using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels.Sockets;
 using Microsoft.Extensions.Options;
+using NosCore.Networking.Encoding;
 using NosCore.Networking.Encoding.Filter;
 using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
@@ -21,13 +22,13 @@ namespace NosCore.Networking
         private readonly ISocketChannel _channel;
         private readonly INetworkClient _clientSession;
         private readonly IOptions<ServerConfiguration> _configuration;
-        private readonly MessageToMessageDecoder<IByteBuffer> _decoder;
-        private readonly MessageToMessageEncoder<IEnumerable<IPacket>> _encoder;
+        private readonly IDecoder _decoder;
+        private readonly IEncoder _encoder;
         private readonly ISessionRefHolder _sessionRefHolder;
         private readonly IEnumerable<RequestFilter> _requestFilters;
 
-        public PipelineFactory(ISocketChannel channel, MessageToMessageDecoder<IByteBuffer> decoder,
-            MessageToMessageEncoder<IEnumerable<IPacket>> encoder, INetworkClient clientSession,
+        public PipelineFactory(ISocketChannel channel, IDecoder decoder,
+           IEncoder encoder, INetworkClient clientSession,
             IOptions<ServerConfiguration> configuration, ISessionRefHolder sessionRefHolder, IEnumerable<RequestFilter> requestFilters)
         {
             _channel = channel;
