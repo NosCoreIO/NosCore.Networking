@@ -65,7 +65,15 @@ namespace NosCore.Networking
                 return;
             }
 
-            await Task.WhenAll(packetlist.Select(packet => Task.Run(() => LastPackets.Enqueue(packet)))).ConfigureAwait(false);
+
+            await Task.WhenAll(packetlist.Select(packet => Task.Run(() =>
+            {
+                if (packet?.IsValid == false)
+                {
+                    _logger.Error(_logLanguage[LogLanguageKey.SENDING_INVALID_PACKET], packet.Header, packet.ValidationResult);
+                }
+                LastPackets.Enqueue(packet);
+            }))).ConfigureAwait(false);
             Parallel.For(0, LastPackets.Count - MaxPacketsBuffer, (_, __) => LastPackets.TryDequeue(out var ___));
             if (Channel == null)
             {
