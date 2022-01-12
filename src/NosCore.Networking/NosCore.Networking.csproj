@@ -34,6 +34,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="NosCore.Analyzers" Version="0.0.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Update="Resource\LocalizedResources.Designer.cs">
 			<DependentUpon>LocalizedResources.resx</DependentUpon>
 			<DesignTime>True</DesignTime>
