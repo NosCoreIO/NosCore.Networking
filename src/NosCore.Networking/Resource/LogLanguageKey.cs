@@ -15,6 +15,7 @@ namespace NosCore.Networking.Resource
         ERROR_SESSIONID,
         FORCED_DISCONNECTION,
         BLOCKED_BY_SPAM_FILTER,
-        CORRUPTED_PACKET
+        CORRUPTED_PACKET,
+        SENDING_INVALID_PACKET
     }
 }

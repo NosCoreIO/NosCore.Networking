@@ -12,7 +12,7 @@
 		<RepositoryUrl>https://github.com/NosCoreIO/NosCore.Networking.git</RepositoryUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageTags>nostale, noscore, nostale private server source, nostale emulator</PackageTags>
-		<Version>2.1.0</Version>
+		<Version>2.2.0</Version>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<Description>NosCore Networking</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -21,6 +21,7 @@
 		<PackageIcon>icon.png</PackageIcon>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>CS1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -29,7 +30,7 @@
 		<PackageReference Include="DotNetty.Common" Version="0.7.1" />
 		<PackageReference Include="DotNetty.Transport" Version="0.7.0" />
 		<PackageReference Include="NodaTime" Version="3.0.9" />
-		<PackageReference Include="NosCore.Packets" Version="8.1.0" />
+		<PackageReference Include="NosCore.Packets" Version="11.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
