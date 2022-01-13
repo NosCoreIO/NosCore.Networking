@@ -113,5 +113,14 @@ namespace NosCore.Networking.Resource {
                 return ResourceManager.GetString("LISTENING_PORT", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sending an invalid packet: {PacketHeader} {ValidationResult}.
+        /// </summary>
+        public static string SENDING_INVALID_PACKET {
+            get {
+                return ResourceManager.GetString("SENDING_INVALID_PACKET", resourceCulture);
+            }
+        }
     }
 }

@@ -135,4 +135,7 @@
   <data name="LISTENING_PORT" xml:space="preserve">
     <value>Écoute du port</value>
   </data>
+  <data name="SENDING_INVALID_PACKET" xml:space="preserve">
+    <value>Envoi d'un packet invalide: {PacketHeader} {ValidationResult}</value>
+  </data>
 </root>
