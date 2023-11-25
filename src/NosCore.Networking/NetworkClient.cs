@@ -106,13 +106,13 @@ namespace NosCore.Networking
                             SessionId);
                         break;
                     default:
-                        _logger.Fatal(exception.StackTrace);
+                        _logger.Fatal(exception.StackTrace ?? "");
                         break;
                 }
             }
             else
             {
-                _logger.Fatal(exception.StackTrace);
+                _logger.Fatal(exception.StackTrace ?? "");
             }
 
             // ReSharper disable once AsyncConverter.AsyncAwaitMayBeElidedHighlighting
