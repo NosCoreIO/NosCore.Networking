@@ -26,11 +26,11 @@ namespace NosCore.Networking
         private readonly IEncoder _encoder;
         private readonly ISessionRefHolder _sessionRefHolder;
         private readonly IEnumerable<RequestFilter> _requestFilters;
-        private readonly byte? _delimiter;
+        private readonly IRequestDelimiter _delimiter;
 
         public PipelineFactory(ISocketChannel channel, IDecoder decoder,
            IEncoder encoder, INetworkClient clientSession,
-            IOptions<ServerConfiguration> configuration, ISessionRefHolder sessionRefHolder, IEnumerable<RequestFilter> requestFilters, byte? delimiter)
+            IOptions<ServerConfiguration> configuration, ISessionRefHolder sessionRefHolder, IEnumerable<RequestFilter> requestFilters, IRequestDelimiter delimiter)
         {
             _channel = channel;
             _decoder = decoder;
@@ -52,10 +52,10 @@ namespace NosCore.Networking
                 pipeline.AddLast(filter);
             }
 
-            if (_delimiter != null)
+            if (_delimiter.Delimiter != null)
             {
                 pipeline.AddLast(new DelimiterBasedFrameDecoder(8192, new[] {
-                    Unpooled.WrappedBuffer(new[] { (byte)_delimiter })
+                    Unpooled.WrappedBuffer(new[] { (byte)_delimiter.Delimiter })
                 }));
             }
 
