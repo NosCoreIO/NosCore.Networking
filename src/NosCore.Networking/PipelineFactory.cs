@@ -49,6 +49,11 @@ namespace NosCore.Networking
             {
                 pipeline.AddLast(filter);
             }
+
+            pipeline.AddLast(new DelimiterBasedFrameDecoder(8192, new []
+            {
+                Unpooled.WrappedBuffer(new [] {(byte)65})
+            }));
             pipeline.AddLast(_decoder);
             _clientSession.RegisterChannel(_channel);
             pipeline.AddLast(_clientSession);
