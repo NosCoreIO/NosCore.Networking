@@ -54,9 +54,8 @@ namespace NosCore.Networking
 
             if (_pipelineConfiguration.Delimiter != null)
             {
-                pipeline.AddLast(new DelimiterBasedFrameDecoder(8192, new[] {
-                    Unpooled.WrappedBuffer(new[] { (byte)_pipelineConfiguration.Delimiter })
-                }));
+
+                pipeline.AddLast(new FrameDelimiter(_sessionRefHolder, _pipelineConfiguration));
             }
 
             pipeline.AddLast(_decoder);
