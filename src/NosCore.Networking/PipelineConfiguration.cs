@@ -6,7 +6,7 @@
 
 namespace NosCore.Networking;
 
-public interface IPipelineConfiguration
+public class PipelineConfiguration : IPipelineConfiguration
 {
     public byte? Delimiter { get; set; }
 }
