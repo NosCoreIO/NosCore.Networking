@@ -8,5 +8,5 @@ namespace NosCore.Networking;
 
 public class PipelineConfiguration : IPipelineConfiguration
 {
-    public byte? Delimiter { get; set; }
+    public bool UseDelimiter { get; set; }
 }
