@@ -52,10 +52,9 @@ namespace NosCore.Networking
                 pipeline.AddLast(filter);
             }
 
-            if (_pipelineConfiguration.Delimiter != null)
+            if (_pipelineConfiguration.UseDelimiter)
             {
-
-                pipeline.AddLast(new FrameDelimiter(_sessionRefHolder, _pipelineConfiguration));
+                pipeline.AddLast(new FrameDelimiter(_sessionRefHolder));
             }
 
             pipeline.AddLast(_decoder);
