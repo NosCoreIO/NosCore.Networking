@@ -27,7 +27,7 @@ namespace NosCore.Networking.Tests
         }
 
         [TestCategory("OPTIONAL-TEST")]
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(RegionType.EN)]
         [DataRow(RegionType.CS)]
         [DataRow(RegionType.DE)]
@@ -51,7 +51,7 @@ namespace NosCore.Networking.Tests
             }
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(RegionType.EN)]
         [DataRow(RegionType.CS)]
         [DataRow(RegionType.DE)]
