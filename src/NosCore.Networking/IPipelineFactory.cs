@@ -12,8 +12,14 @@ using System.Threading.Tasks;
 
 namespace NosCore.Networking
 {
+    /// <summary>
+    /// Defines a factory for creating network channel pipelines.
+    /// </summary>
     public interface IPipelineFactory
     {
+        /// <summary>
+        /// Creates and configures the network channel pipeline with all required handlers.
+        /// </summary>
         void CreatePipeline();
     }
 }

@@ -13,15 +13,28 @@ using NosCore.Networking.SessionRef;
 
 namespace NosCore.Networking.Encoding;
 
+/// <summary>
+/// Delimits incoming byte streams into frames based on session-specific delimiters.
+/// </summary>
 public class FrameDelimiter : ByteToMessageDecoder
 {
     private readonly ISessionRefHolder _sessionRefHolder;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FrameDelimiter"/> class.
+    /// </summary>
+    /// <param name="sessionRefHolder">The session reference holder.</param>
     public FrameDelimiter(ISessionRefHolder sessionRefHolder)
     {
         _sessionRefHolder = sessionRefHolder;
     }
 
-
+    /// <summary>
+    /// Decodes the incoming byte buffer into frames based on delimiters.
+    /// </summary>
+    /// <param name="context">The channel handler context.</param>
+    /// <param name="input">The input byte buffer.</param>
+    /// <param name="output">The output list to add decoded frames to.</param>
     protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
     {
         var sessionId = context.Channel.Id.AsLongText();
@@ -45,6 +58,12 @@ public class FrameDelimiter : ByteToMessageDecoder
         }
     }
 
+    /// <summary>
+    /// Gets the delimiter byte for a specific session.
+    /// </summary>
+    /// <param name="session">The session identifier.</param>
+    /// <param name="isFirstPacket">Whether this is the first packet in the session.</param>
+    /// <returns>The delimiter byte for the session.</returns>
     public static byte GetDelimiter(int session, bool isFirstPacket = false)
     {
         int stype = !isFirstPacket ? (session >> 6) & 3 : -1;

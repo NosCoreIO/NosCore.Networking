@@ -19,12 +19,20 @@ using Serilog;
 
 namespace NosCore.Networking
 {
+    /// <summary>
+    /// Represents a network client that manages packet communication and handles channel events.
+    /// </summary>
     public class NetworkClient : ChannelHandlerAdapter, INetworkClient
     {
         private const short MaxPacketsBuffer = 50;
         private readonly ILogger _logger;
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkClient"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
         public NetworkClient(ILogger logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _logger = logger;
@@ -32,15 +40,35 @@ namespace NosCore.Networking
             _logLanguage = logLanguage;
         }
 
+        /// <summary>
+        /// Gets the communication channel associated with this client.
+        /// </summary>
         public IChannel? Channel { get; private set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the client has selected a character.
+        /// </summary>
         public bool HasSelectedCharacter { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the client is authenticated.
+        /// </summary>
         public bool IsAuthenticated { get; set; }
 
+        /// <summary>
+        /// Gets or sets the unique session identifier for this client.
+        /// </summary>
         public int SessionId { get; set; }
+
+        /// <summary>
+        /// Gets the queue of recently sent packets.
+        /// </summary>
         public ConcurrentQueue<IPacket?> LastPackets { get; }
 
+        /// <summary>
+        /// Disconnects the client asynchronously.
+        /// </summary>
+        /// <returns>A task representing the asynchronous disconnect operation.</returns>
         public async Task DisconnectAsync()
         {
             _logger.Information(_logLanguage[LogLanguageKey.FORCED_DISCONNECTION],
@@ -51,11 +79,21 @@ namespace NosCore.Networking
             }
         }
 
+        /// <summary>
+        /// Sends a single packet to the client asynchronously.
+        /// </summary>
+        /// <param name="packet">The packet to send.</param>
+        /// <returns>A task representing the asynchronous send operation.</returns>
         public Task SendPacketAsync(IPacket? packet)
         {
             return SendPacketsAsync(new[] { packet });
         }
 
+        /// <summary>
+        /// Sends multiple packets to the client asynchronously.
+        /// </summary>
+        /// <param name="packets">The collection of packets to send.</param>
+        /// <returns>A task representing the asynchronous send operation.</returns>
         public async Task SendPacketsAsync(IEnumerable<IPacket?> packets)
         {
             var packetlist = packets.ToList();
@@ -82,11 +120,20 @@ namespace NosCore.Networking
             await Channel.WriteAndFlushAsync(packetDefinitions).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Registers a socket channel with this network client.
+        /// </summary>
+        /// <param name="channel">The socket channel to register.</param>
         public void RegisterChannel(ISocketChannel? channel)
         {
             Channel = channel;
         }
 
+        /// <summary>
+        /// Handles exceptions that occur during channel operations.
+        /// </summary>
+        /// <param name="context">The channel handler context.</param>
+        /// <param name="exception">The exception that occurred.</param>
 #pragma warning disable VSTHRD100 // Avoid async void methods
         public override async void ExceptionCaught(IChannelHandlerContext context, Exception exception)
 #pragma warning restore VSTHRD100 // Avoid async void methods

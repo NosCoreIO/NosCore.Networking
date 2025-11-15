@@ -8,8 +8,15 @@ using System.Collections.Generic;
 
 namespace NosCore.Networking.SessionRef
 {
+    /// <summary>
+    /// Defines a holder for managing session references and generating session identifiers.
+    /// </summary>
     public interface ISessionRefHolder : IDictionary<string, RegionTypeMapping>
     {
+        /// <summary>
+        /// Generates a new unique session identifier.
+        /// </summary>
+        /// <returns>A new session identifier.</returns>
         public int GenerateSessionId();
     }
 }

@@ -16,23 +16,43 @@ using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
 {
+    /// <summary>
+    /// Encodes packets for world server communication using region-specific encoding.
+    /// </summary>
     public class WorldEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>, IEncoder
     {
         private readonly ISerializer _serializer;
         private readonly ISessionRefHolder _sessionRefHolder;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WorldEncoder"/> class.
+        /// </summary>
+        /// <param name="serializer">The packet serializer.</param>
+        /// <param name="sessionRefHolder">The session reference holder.</param>
         public WorldEncoder(ISerializer serializer, ISessionRefHolder sessionRefHolder)
         {
             _serializer = serializer;
             _sessionRefHolder = sessionRefHolder;
         }
 
+        /// <summary>
+        /// Encodes packets into a byte buffer for transmission.
+        /// </summary>
+        /// <param name="context">The channel handler context.</param>
+        /// <param name="message">The packets to encode.</param>
+        /// <param name="output">The output list to add the encoded buffer to.</param>
         protected override void Encode(IChannelHandlerContext context, IEnumerable<IPacket> message,
             List<object> output)
         {
             output.Add(Unpooled.WrappedBuffer(Encode(context.Channel.Id.AsLongText(), message)));
         }
 
+        /// <summary>
+        /// Encodes a collection of packets into a byte array using world server encoding.
+        /// </summary>
+        /// <param name="clientSessionId">The client session identifier.</param>
+        /// <param name="packets">The packets to encode.</param>
+        /// <returns>A byte array containing the encoded packet data.</returns>
         public byte[] Encode(string clientSessionId, IEnumerable<IPacket> packets)
         {
             return packets.SelectMany(packet =>
