@@ -5,7 +5,6 @@
 // -----------------------------------
 
 using System.Net;
-using Castle.Core.Logging;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
