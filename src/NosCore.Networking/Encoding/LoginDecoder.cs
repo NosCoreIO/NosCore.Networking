@@ -19,6 +19,9 @@ using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding
 {
+    /// <summary>
+    /// Decodes packets from login server communication using region-specific decoding.
+    /// </summary>
     public class LoginDecoder : MessageToMessageDecoder<IByteBuffer>, IDecoder
     {
         private readonly IDeserializer _deserializer;
@@ -26,6 +29,13 @@ namespace NosCore.Networking.Encoding
         private readonly ISessionRefHolder _sessionRefHolder;
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoginDecoder"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="deserializer">The packet deserializer.</param>
+        /// <param name="sessionRefHolder">The session reference holder.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
         public LoginDecoder(ILogger<LoginDecoder> logger, IDeserializer deserializer, ISessionRefHolder sessionRefHolder, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _logger = logger;
@@ -34,6 +44,12 @@ namespace NosCore.Networking.Encoding
             _logLanguage = logLanguage;
         }
 
+        /// <summary>
+        /// Decodes a byte span into a collection of packets using login server decoding.
+        /// </summary>
+        /// <param name="clientSessionId">The client session identifier.</param>
+        /// <param name="message">The byte span containing the encoded packet data.</param>
+        /// <returns>A collection of decoded packets.</returns>
         public IEnumerable<IPacket> Decode(string clientSessionId, Span<byte> message)
         {
             try
@@ -75,6 +91,12 @@ namespace NosCore.Networking.Encoding
             return Array.Empty<IPacket>();
         }
 
+        /// <summary>
+        /// Decodes a byte buffer into packets.
+        /// </summary>
+        /// <param name="context">The channel handler context.</param>
+        /// <param name="message">The byte buffer containing encoded packet data.</param>
+        /// <param name="output">The output list to add decoded packets to.</param>
         protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
         {
             var packets = Decode(context.Channel.Id.AsLongText(),

@@ -15,6 +15,9 @@ using NosCore.Shared.I18N;
 
 namespace NosCore.Networking.Encoding.Filter
 {
+    /// <summary>
+    /// Filters spam requests by rate-limiting connections from the same IP address.
+    /// </summary>
     public class SpamRequestFilter : RequestFilter
     {
         private readonly Dictionary<EndPoint, Instant> _connectionsByIp = new();
@@ -22,8 +25,18 @@ namespace NosCore.Networking.Encoding.Filter
         private readonly IClock _clock;
         private readonly ILogger<SpamRequestFilter> _logger;
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
+
+        /// <summary>
+        /// Gets a value indicating whether this handler can be shared across multiple channels.
+        /// </summary>
         public override bool IsSharable => true;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpamRequestFilter"/> class.
+        /// </summary>
+        /// <param name="clock">The clock instance for time tracking.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
         public SpamRequestFilter(IClock clock, ILogger<SpamRequestFilter> logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _clock = clock;
@@ -31,6 +44,12 @@ namespace NosCore.Networking.Encoding.Filter
             _logLanguage = logLanguage;
         }
 
+        /// <summary>
+        /// Filters incoming requests based on connection rate from the same IP address.
+        /// </summary>
+        /// <param name="context">The channel handler context.</param>
+        /// <param name="message">The incoming message bytes.</param>
+        /// <returns>The message bytes if allowed, or null if blocked by the spam filter.</returns>
         public override byte[]? Filter(IChannelHandlerContext context, Span<byte> message)
         {
             if (_connectionsByIp.TryGetValue(context.Channel.RemoteAddress, out var date))

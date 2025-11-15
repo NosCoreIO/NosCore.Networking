@@ -17,6 +17,9 @@ using NosCore.Shared.Configuration;
 
 namespace NosCore.Networking
 {
+    /// <summary>
+    /// Factory class responsible for creating and configuring network channel pipelines.
+    /// </summary>
     public class PipelineFactory : IPipelineFactory
     {
         private readonly ISocketChannel _channel;
@@ -28,6 +31,17 @@ namespace NosCore.Networking
         private readonly IEnumerable<RequestFilter> _requestFilters;
         private readonly IPipelineConfiguration _pipelineConfiguration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PipelineFactory"/> class.
+        /// </summary>
+        /// <param name="channel">The socket channel to configure.</param>
+        /// <param name="decoder">The decoder for incoming packets.</param>
+        /// <param name="encoder">The encoder for outgoing packets.</param>
+        /// <param name="clientSession">The network client session handler.</param>
+        /// <param name="configuration">The server configuration options.</param>
+        /// <param name="sessionRefHolder">The session reference holder.</param>
+        /// <param name="requestFilters">The collection of request filters to apply.</param>
+        /// <param name="pipelineConfiguration">The pipeline configuration settings.</param>
         public PipelineFactory(ISocketChannel channel, IDecoder decoder,
            IEncoder encoder, INetworkClient clientSession,
             IOptions<ServerConfiguration> configuration, ISessionRefHolder sessionRefHolder, IEnumerable<RequestFilter> requestFilters, IPipelineConfiguration pipelineConfiguration)
@@ -42,6 +56,9 @@ namespace NosCore.Networking
             _pipelineConfiguration = pipelineConfiguration;
         }
 
+        /// <summary>
+        /// Creates and configures the network channel pipeline with filters, decoder, encoder, and client handlers.
+        /// </summary>
         public void CreatePipeline()
         {
             _sessionRefHolder[_channel.Id.AsLongText()] =

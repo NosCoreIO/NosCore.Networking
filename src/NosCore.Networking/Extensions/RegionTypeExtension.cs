@@ -9,8 +9,16 @@ using NosCore.Shared.Enumerations;
 
 namespace NosCore.Networking.Extensions
 {
+    /// <summary>
+    /// Provides extension methods for <see cref="RegionType"/>.
+    /// </summary>
     public static class RegionTypeExtension
     {
+        /// <summary>
+        /// Gets the text encoding associated with a specific region type.
+        /// </summary>
+        /// <param name="region">The region type.</param>
+        /// <returns>The encoding for the specified region, or the default encoding if the region is not recognized.</returns>
         public static System.Text.Encoding? GetEncoding(this RegionType region)
         {
             return region switch

@@ -6,7 +6,13 @@
 
 namespace NosCore.Networking;
 
+/// <summary>
+/// Provides configuration settings for the network pipeline.
+/// </summary>
 public class PipelineConfiguration : IPipelineConfiguration
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether to use frame delimiters in the pipeline.
+    /// </summary>
     public bool UseDelimiter { get; set; }
 }

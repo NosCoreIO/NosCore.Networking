@@ -11,8 +11,17 @@ using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
 {
+    /// <summary>
+    /// Defines a packet decoder that converts byte data into packets.
+    /// </summary>
     public interface IDecoder : IChannelHandler
     {
+        /// <summary>
+        /// Decodes a byte span into a collection of packets.
+        /// </summary>
+        /// <param name="clientSessionId">The client session identifier.</param>
+        /// <param name="message">The byte span containing the encoded packet data.</param>
+        /// <returns>A collection of decoded packets.</returns>
         IEnumerable<IPacket> Decode(string clientSessionId, Span<byte> message);
     }
 }

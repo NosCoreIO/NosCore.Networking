@@ -18,12 +18,22 @@ using NosCore.Shared.I18N;
 
 namespace NosCore.Networking
 {
+    /// <summary>
+    /// Manages the network server lifecycle and handles incoming client connections.
+    /// </summary>
     public class NetworkManager
     {
         private readonly IOptions<ServerConfiguration> _configuration;
         private readonly ILogger<NetworkManager> _logger;
         private readonly Func<ISocketChannel, IPipelineFactory> _pipelineFactory;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkManager"/> class.
+        /// </summary>
+        /// <param name="configuration">The server configuration options.</param>
+        /// <param name="pipelineFactory">Factory function for creating pipeline instances per channel.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
         public NetworkManager(IOptions<ServerConfiguration> configuration,
             Func<ISocketChannel, IPipelineFactory> pipelineFactory, ILogger<NetworkManager> logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
@@ -36,6 +46,10 @@ namespace NosCore.Networking
         private static readonly AutoResetEvent ClosingEvent = new AutoResetEvent(false);
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
+        /// <summary>
+        /// Starts and runs the network server, listening for incoming client connections.
+        /// </summary>
+        /// <returns>A task representing the asynchronous server operation.</returns>
         public async Task RunServerAsync()
         {
             var bossGroup = new MultithreadEventLoopGroup(1);
