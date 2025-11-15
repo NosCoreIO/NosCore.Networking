@@ -4,7 +4,6 @@
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
-using System.Linq;
 using System.Net;
 using Castle.Core.Logging;
 using DotNetty.Transport.Channels;
@@ -30,7 +29,7 @@ namespace NosCore.Networking.Tests
             var clock = new FakeClock(Instant.FromUtc(2022, 01, 01, 01, 01, 1));
             var spamFilter = new SpamRequestFilter(clock, new Mock<ILogger<SpamRequestFilter>>().Object, new Mock<ILogLanguageLocalizer<LogLanguageKey>>().Object);
             var output = spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
-            Assert.IsTrue(new byte[] { 1, 2, 3 }.SequenceEqual(output));
+            CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, output);
         }
 
         [TestMethod]
@@ -46,7 +45,7 @@ namespace NosCore.Networking.Tests
             var spamFilter = new SpamRequestFilter(clock, new Mock<ILogger<SpamRequestFilter>>().Object, new Mock<ILogLanguageLocalizer<LogLanguageKey>>().Object);
             spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
             var output = spamFilter.Filter(ctx2.Object, new byte[] { 1, 2, 3 });
-            Assert.IsTrue(new byte[] { 1, 2, 3 }.SequenceEqual(output));
+            CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, output);
         }
 
         [TestMethod]
@@ -74,7 +73,7 @@ namespace NosCore.Networking.Tests
             spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
             clock.AdvanceSeconds(1);
             var output = spamFilter.Filter(ctx.Object, new byte[] { 1, 2, 3 });
-            Assert.IsTrue(new byte[] { 1, 2, 3 }.SequenceEqual(output));
+            CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, output);
         }
     }
 }
