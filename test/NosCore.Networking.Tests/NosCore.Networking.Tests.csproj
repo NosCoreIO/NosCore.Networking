@@ -6,13 +6,6 @@
 		<IsPackable>false</IsPackable>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<AssemblyAttribute Include="Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute">
-			<_Parameter1>Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel</_Parameter1>
-			<_Parameter1_TypeName>Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope</_Parameter1_TypeName>
-		</AssemblyAttribute>
-	</ItemGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<OutputPath>..\..\build\</OutputPath>
