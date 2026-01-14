@@ -5,6 +5,7 @@
 // -----------------------------------
 
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace NosCore.Networking.SessionRef;
 
@@ -21,8 +22,7 @@ public class SessionRefHolder : ConcurrentDictionary<string, RegionTypeMapping>,
     /// <returns>A new session identifier incremented by 2.</returns>
     public int GenerateSessionId()
     {
-        _sessionCounter += 2;
-        return _sessionCounter;
+        return Interlocked.Add(ref _sessionCounter, 2);
     }
 
     /// <summary>

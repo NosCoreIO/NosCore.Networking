@@ -7,11 +7,14 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using NosCore.Networking.Encoding;
 using NosCore.Networking.Encoding.Filter;
 using NosCore.Networking.Filters;
+using NosCore.Networking.Resource;
 using NosCore.Networking.SessionRef;
 using NosCore.Shared.Enumerations;
+using NosCore.Shared.I18N;
 using SuperSocket.ProtoBase;
 using SuperSocket.Server.Abstractions.Session;
 
@@ -29,6 +32,8 @@ namespace NosCore.Networking
         private readonly Func<INetworkClient> _clientFactory;
         private readonly Action<NosPackageInfo, INetworkClient> _packetHandler;
         private readonly Action<INetworkClient>? _disconnectHandler;
+        private readonly ILogger<PipelineFactory>? _logger;
+        private readonly ILogLanguageLocalizer<LogLanguageKey>? _logLanguage;
 
         private readonly ConcurrentDictionary<object, PipelineFilter> _filtersByConnection = new();
         private readonly ConcurrentDictionary<string, INetworkClient> _clientsBySession = new();
@@ -43,10 +48,13 @@ namespace NosCore.Networking
         /// <param name="clientFactory">Factory function to create network client instances.</param>
         /// <param name="packetHandler">Handler for processing received packets.</param>
         /// <param name="disconnectHandler">Handler for processing client disconnections.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
         public PipelineFactory(IDecoder decoder, ISessionRefHolder sessionRefHolder,
             IEnumerable<IRequestFilter> requestFilters, IPipelineConfiguration pipelineConfiguration,
             Func<INetworkClient> clientFactory, Action<NosPackageInfo, INetworkClient> packetHandler,
-            Action<INetworkClient>? disconnectHandler = null)
+            Action<INetworkClient>? disconnectHandler = null,
+            ILogger<PipelineFactory>? logger = null, ILogLanguageLocalizer<LogLanguageKey>? logLanguage = null)
         {
             _decoder = decoder;
             _sessionRefHolder = sessionRefHolder;
@@ -55,6 +63,8 @@ namespace NosCore.Networking
             _clientFactory = clientFactory;
             _packetHandler = packetHandler;
             _disconnectHandler = disconnectHandler;
+            _logger = logger;
+            _logLanguage = logLanguage;
         }
 
         /// <summary>
@@ -114,6 +124,10 @@ namespace NosCore.Networking
             if (_clientsBySession.TryGetValue(session.SessionID, out var client))
             {
                 _packetHandler(package, client);
+            }
+            else if (_logger != null && _logLanguage != null)
+            {
+                _logger.LogWarning(_logLanguage[LogLanguageKey.ERROR_SESSIONID], session.SessionID);
             }
         }
     }

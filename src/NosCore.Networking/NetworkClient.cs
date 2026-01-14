@@ -140,8 +140,15 @@ namespace NosCore.Networking
                 return;
             }
 
-            var encoded = _encoder.Encode(SessionKey, packetList);
-            await _channel.SendAsync(new ReadOnlyMemory<byte>(encoded));
+            try
+            {
+                var encoded = _encoder.Encode(SessionKey, packetList);
+                await _channel.SendAsync(new ReadOnlyMemory<byte>(encoded));
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, _logLanguage[LogLanguageKey.ENCODE_ERROR], SessionId);
+            }
         }
     }
 }

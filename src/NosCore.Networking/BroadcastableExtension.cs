@@ -51,23 +51,33 @@ namespace NosCore.Networking
             ISessionMatcher? matcher)
         {
             var packetDefinitions = (packets as IPacket[] ?? packets).Where(c => c != null).ToArray();
-            if (packetDefinitions.Any())
+            if (packetDefinitions.Length == 0)
             {
-                Parallel.ForEach(packets, packet => channelGroup.LastPackets.Enqueue(packet));
-                Parallel.For(0, channelGroup.LastPackets.Count - channelGroup.MaxPacketsBuffer, (_, __) => channelGroup.LastPackets.TryDequeue(out var ___));
-                if (channelGroup.Sessions == null!)
-                {
-                    return;
-                }
+                return;
+            }
 
-                if (matcher == null)
-                {
-                    await channelGroup.Sessions.Broadcast(packetDefinitions).ConfigureAwait(false);
-                }
-                else
-                {
-                    await channelGroup.Sessions.Broadcast(packetDefinitions, matcher).ConfigureAwait(false);
-                }
+            foreach (var packet in packetDefinitions)
+            {
+                channelGroup.LastPackets.Enqueue(packet);
+            }
+
+            while (channelGroup.LastPackets.Count > channelGroup.MaxPacketsBuffer)
+            {
+                channelGroup.LastPackets.TryDequeue(out _);
+            }
+
+            if (channelGroup.Sessions == null!)
+            {
+                return;
+            }
+
+            if (matcher == null)
+            {
+                await channelGroup.Sessions.Broadcast(packetDefinitions).ConfigureAwait(false);
+            }
+            else
+            {
+                await channelGroup.Sessions.Broadcast(packetDefinitions, matcher).ConfigureAwait(false);
             }
         }
 
