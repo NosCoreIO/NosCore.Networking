@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using DotNetty.Transport.Channels;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
@@ -14,7 +13,7 @@ namespace NosCore.Networking.Encoding
     /// <summary>
     /// Defines a packet decoder that converts byte data into packets.
     /// </summary>
-    public interface IDecoder : IChannelHandler
+    public interface IDecoder
     {
         /// <summary>
         /// Decodes a byte span into a collection of packets.

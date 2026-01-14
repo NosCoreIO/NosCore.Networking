@@ -8,9 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Extensions;
 using NosCore.Networking.Resource;
@@ -25,7 +22,7 @@ namespace NosCore.Networking.Encoding
     /// <summary>
     /// Decodes packets from world server communication using region-specific decoding.
     /// </summary>
-    public class WorldDecoder : MessageToMessageDecoder<IByteBuffer>, IDecoder
+    public class WorldDecoder : IDecoder
     {
         private readonly IDeserializer _deserializer;
         private readonly ILogger<WorldDecoder> _logger;
@@ -179,23 +176,6 @@ namespace NosCore.Networking.Encoding
             catch (OverflowException)
             {
                 return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Decodes a byte buffer into packets.
-        /// </summary>
-        /// <param name="context">The channel handler context.</param>
-        /// <param name="message">The byte buffer containing encoded packet data.</param>
-        /// <param name="output">The output list to add decoded packets to.</param>
-        protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
-        {
-            var packets = Decode(context.Channel.Id.AsLongText(),
-                ((Span<byte>)message.Array).Slice(message.ArrayOffset, message.ReadableBytes));
-
-            if (packets.Any())
-            {
-                output.Add(packets);
             }
         }
 

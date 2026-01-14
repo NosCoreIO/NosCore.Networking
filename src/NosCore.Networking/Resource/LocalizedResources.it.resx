@@ -135,4 +135,7 @@
   <data name="LISTENING_PORT" xml:space="preserve">
     <value>Ascolto della porta {0}</value>
   </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Pacchetto corrotto: {0} - {1}</value>
+  </data>
 </root>

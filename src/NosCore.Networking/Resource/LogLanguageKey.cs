@@ -54,6 +54,11 @@ namespace NosCore.Networking.Resource
         /// <summary>
         /// Log message when attempting to send an invalid packet.
         /// </summary>
-        SENDING_INVALID_PACKET
+        SENDING_INVALID_PACKET,
+
+        /// <summary>
+        /// Log message when broadcasting to a session fails.
+        /// </summary>
+        BROADCAST_ERROR
     }
 }

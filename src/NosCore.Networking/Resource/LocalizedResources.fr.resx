@@ -138,4 +138,7 @@
   <data name="SENDING_INVALID_PACKET" xml:space="preserve">
     <value>Envoi d'un packet invalide: {PacketHeader} {ValidationResult}</value>
   </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Paquet corrompu: {0} - {1}</value>
+  </data>
 </root>

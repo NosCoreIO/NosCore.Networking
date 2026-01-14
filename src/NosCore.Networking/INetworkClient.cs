@@ -1,4 +1,4 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
@@ -6,21 +6,35 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking
 {
     /// <summary>
-    /// Defines a network client that handles packet communication and channel management.
+    /// Defines a network client that handles packet communication and session management.
     /// </summary>
-    public interface INetworkClient : IChannelHandler
+    public interface INetworkClient
     {
+        /// <summary>
+        /// Gets the unique session key for this client.
+        /// </summary>
+        string SessionKey { get; }
+
         /// <summary>
         /// Gets or sets the unique session identifier for this client.
         /// </summary>
         int SessionId { get; set; }
+
+        /// <summary>
+        /// Gets the communication channel associated with this client.
+        /// </summary>
+        IChannel? Channel { get; }
+
+        /// <summary>
+        /// Registers a channel with this network client.
+        /// </summary>
+        /// <param name="channel">The channel to register.</param>
+        void RegisterChannel(IChannel channel);
 
         /// <summary>
         /// Disconnects the client asynchronously.
@@ -41,11 +55,5 @@ namespace NosCore.Networking
         /// <param name="packets">The collection of packets to send.</param>
         /// <returns>A task representing the asynchronous send operation.</returns>
         Task SendPacketsAsync(IEnumerable<IPacket> packets);
-
-        /// <summary>
-        /// Registers a socket channel with this network client.
-        /// </summary>
-        /// <param name="channel">The socket channel to register.</param>
-        void RegisterChannel(ISocketChannel channel);
     }
 }

@@ -138,4 +138,13 @@
   <data name="SENDING_INVALID_PACKET" xml:space="preserve">
     <value>Sending an invalid packet: {PacketHeader} {ValidationResult}</value>
   </data>
+  <data name="ERROR_SESSIONID" xml:space="preserve">
+    <value>Invalid session ID: {0}</value>
+  </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Corrupted packet received: {0} - {1}</value>
+  </data>
+  <data name="BROADCAST_ERROR" xml:space="preserve">
+    <value>Failed to broadcast to session {0}</value>
+  </data>
 </root>

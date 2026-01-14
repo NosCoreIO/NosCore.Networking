@@ -1,38 +1,35 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Groups;
-
 namespace NosCore.Networking.SessionGroup.ChannelMatcher
 {
     /// <summary>
-    /// A channel matcher that matches all channels except a specific one.
+    /// A session matcher that matches all sessions except a specific one.
     /// </summary>
-    public class EveryoneBut : IChannelMatcher
+    public class EveryoneBut : ISessionMatcher
     {
-        private readonly IChannelId _id;
+        private readonly string _id;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EveryoneBut"/> class.
         /// </summary>
-        /// <param name="id">The channel identifier to exclude from matching.</param>
-        public EveryoneBut(IChannelId id)
+        /// <param name="id">The session identifier to exclude from matching.</param>
+        public EveryoneBut(string id)
         {
             _id = id;
         }
 
         /// <summary>
-        /// Determines whether the specified channel matches (is not the excluded channel).
+        /// Determines whether the specified session matches (is not the excluded session).
         /// </summary>
-        /// <param name="channel">The channel to test.</param>
-        /// <returns>True if the channel is not the excluded channel; otherwise, false.</returns>
-        public bool Matches(IChannel channel)
+        /// <param name="sessionId">The session to test.</param>
+        /// <returns>True if the session is not the excluded session; otherwise, false.</returns>
+        public bool Matches(string sessionId)
         {
-            return channel.Id != _id;
+            return sessionId != _id;
         }
     }
 }

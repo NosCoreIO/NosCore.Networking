@@ -132,4 +132,10 @@
   <data name="LISTENING_PORT" xml:space="preserve">
     <value>Escuchando el puerto: {0}</value>
   </data>
+  <data name="ERROR_SESSIONID" xml:space="preserve">
+    <value>ID de sesión inválido: {0}</value>
+  </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Paquete corrupto: {0} - {1}</value>
+  </data>
 </root>

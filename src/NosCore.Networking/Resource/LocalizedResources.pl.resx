@@ -132,4 +132,10 @@
   <data name="LISTENING_PORT" xml:space="preserve">
     <value>Port nasłuchu: {0}</value>
   </data>
+  <data name="ERROR_SESSIONID" xml:space="preserve">
+    <value>Nieprawidłowy identyfikator sesji: {0}</value>
+  </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Uszkodzony pakiet: {0} - {1}</value>
+  </data>
 </root>

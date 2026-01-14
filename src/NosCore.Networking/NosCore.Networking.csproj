@@ -12,7 +12,7 @@
 		<RepositoryUrl>https://github.com/NosCoreIO/NosCore.Networking.git</RepositoryUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageTags>nostale, noscore, nostale private server source, nostale emulator</PackageTags>
-		<Version>6.0.0</Version>
+		<Version>7.0.0</Version>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<Description>NosCore Networking</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -25,14 +25,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DotNetty.Buffers" Version="0.7.6" />
-		<PackageReference Include="DotNetty.Codecs" Version="0.7.6" />
-		<PackageReference Include="DotNetty.Common" Version="0.7.6" />
-		<PackageReference Include="DotNetty.Transport" Version="0.7.6" />
+		<PackageReference Include="SuperSocket.Server" Version="2.0.2" />
+		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.2" />
 		<PackageReference Include="NodaTime" Version="3.2.0" />
 		<PackageReference Include="NosCore.Packets" Version="15.0.0" />
 		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

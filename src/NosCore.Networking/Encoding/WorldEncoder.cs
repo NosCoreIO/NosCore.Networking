@@ -1,4 +1,4 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
@@ -7,9 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Transport.Channels;
 using NosCore.Networking.Extensions;
 using NosCore.Networking.SessionRef;
 using NosCore.Packets.Interfaces;
@@ -19,7 +16,7 @@ namespace NosCore.Networking.Encoding
     /// <summary>
     /// Encodes packets for world server communication using region-specific encoding.
     /// </summary>
-    public class WorldEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>, IEncoder
+    public class WorldEncoder : IEncoder
     {
         private readonly ISerializer _serializer;
         private readonly ISessionRefHolder _sessionRefHolder;
@@ -33,18 +30,6 @@ namespace NosCore.Networking.Encoding
         {
             _serializer = serializer;
             _sessionRefHolder = sessionRefHolder;
-        }
-
-        /// <summary>
-        /// Encodes packets into a byte buffer for transmission.
-        /// </summary>
-        /// <param name="context">The channel handler context.</param>
-        /// <param name="message">The packets to encode.</param>
-        /// <param name="output">The output list to add the encoded buffer to.</param>
-        protected override void Encode(IChannelHandlerContext context, IEnumerable<IPacket> message,
-            List<object> output)
-        {
-            output.Add(Unpooled.WrappedBuffer(Encode(context.Channel.Id.AsLongText(), message)));
         }
 
         /// <summary>
@@ -79,6 +64,5 @@ namespace NosCore.Networking.Encoding
                 return encryptedData;
             }).ToArray();
         }
-
     }
 }

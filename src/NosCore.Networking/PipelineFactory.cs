@@ -4,80 +4,131 @@
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Transport.Channels.Sockets;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using NosCore.Networking.Encoding;
 using NosCore.Networking.Encoding.Filter;
+using NosCore.Networking.Filters;
+using NosCore.Networking.Resource;
 using NosCore.Networking.SessionRef;
-using NosCore.Packets.Interfaces;
-using NosCore.Shared.Configuration;
+using NosCore.Shared.Enumerations;
+using NosCore.Shared.I18N;
+using SuperSocket.ProtoBase;
+using SuperSocket.Server.Abstractions.Session;
 
 namespace NosCore.Networking
 {
     /// <summary>
     /// Factory class responsible for creating and configuring network channel pipelines.
     /// </summary>
-    public class PipelineFactory : IPipelineFactory
+    public class PipelineFactory : IPipelineFilterFactory<NosPackageInfo>
     {
-        private readonly ISocketChannel _channel;
-        private readonly INetworkClient _clientSession;
-        private readonly IOptions<ServerConfiguration> _configuration;
         private readonly IDecoder _decoder;
-        private readonly IEncoder _encoder;
         private readonly ISessionRefHolder _sessionRefHolder;
-        private readonly IEnumerable<RequestFilter> _requestFilters;
+        private readonly IEnumerable<IRequestFilter> _requestFilters;
         private readonly IPipelineConfiguration _pipelineConfiguration;
+        private readonly Func<INetworkClient> _clientFactory;
+        private readonly Action<NosPackageInfo, INetworkClient> _packetHandler;
+        private readonly Action<INetworkClient>? _disconnectHandler;
+        private readonly ILogger<PipelineFactory>? _logger;
+        private readonly ILogLanguageLocalizer<LogLanguageKey>? _logLanguage;
+
+        private readonly ConcurrentDictionary<object, PipelineFilter> _filtersByConnection = new();
+        private readonly ConcurrentDictionary<string, INetworkClient> _clientsBySession = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PipelineFactory"/> class.
         /// </summary>
-        /// <param name="channel">The socket channel to configure.</param>
         /// <param name="decoder">The decoder for incoming packets.</param>
-        /// <param name="encoder">The encoder for outgoing packets.</param>
-        /// <param name="clientSession">The network client session handler.</param>
-        /// <param name="configuration">The server configuration options.</param>
         /// <param name="sessionRefHolder">The session reference holder.</param>
         /// <param name="requestFilters">The collection of request filters to apply.</param>
         /// <param name="pipelineConfiguration">The pipeline configuration settings.</param>
-        public PipelineFactory(ISocketChannel channel, IDecoder decoder,
-           IEncoder encoder, INetworkClient clientSession,
-            IOptions<ServerConfiguration> configuration, ISessionRefHolder sessionRefHolder, IEnumerable<RequestFilter> requestFilters, IPipelineConfiguration pipelineConfiguration)
+        /// <param name="clientFactory">Factory function to create network client instances.</param>
+        /// <param name="packetHandler">Handler for processing received packets.</param>
+        /// <param name="disconnectHandler">Handler for processing client disconnections.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
+        public PipelineFactory(IDecoder decoder, ISessionRefHolder sessionRefHolder,
+            IEnumerable<IRequestFilter> requestFilters, IPipelineConfiguration pipelineConfiguration,
+            Func<INetworkClient> clientFactory, Action<NosPackageInfo, INetworkClient> packetHandler,
+            Action<INetworkClient>? disconnectHandler = null,
+            ILogger<PipelineFactory>? logger = null, ILogLanguageLocalizer<LogLanguageKey>? logLanguage = null)
         {
-            _channel = channel;
             _decoder = decoder;
-            _encoder = encoder;
-            _clientSession = clientSession;
-            _configuration = configuration;
             _sessionRefHolder = sessionRefHolder;
             _requestFilters = requestFilters;
             _pipelineConfiguration = pipelineConfiguration;
+            _clientFactory = clientFactory;
+            _packetHandler = packetHandler;
+            _disconnectHandler = disconnectHandler;
+            _logger = logger;
+            _logLanguage = logLanguage;
         }
 
         /// <summary>
-        /// Creates and configures the network channel pipeline with filters, decoder, encoder, and client handlers.
+        /// Creates a pipeline filter for a new connection.
         /// </summary>
-        public void CreatePipeline()
+        /// <param name="connection">The connection object.</param>
+        /// <returns>A configured pipeline filter.</returns>
+        public IPipelineFilter<NosPackageInfo> Create(object connection)
         {
-            _sessionRefHolder[_channel.Id.AsLongText()] =
-                new RegionTypeMapping(0, _configuration.Value.Language);
-            var pipeline = _channel.Pipeline;
-            foreach (var filter in _requestFilters)
-            {
-                pipeline.AddLast(filter);
-            }
+            var filter = new PipelineFilter(_decoder, _sessionRefHolder, _requestFilters, _pipelineConfiguration.UseDelimiter);
+            var typedContext = filter.Context as IAppSession;
+            _sessionRefHolder[typedContext!.SessionID] = new RegionTypeMapping(0, _pipelineConfiguration.Language);
+            _filtersByConnection[connection] = filter;
+            return filter;
+        }
 
-            if (_pipelineConfiguration.UseDelimiter)
-            {
-                pipeline.AddLast(new FrameDelimiter(_sessionRefHolder));
-            }
+        /// <summary>
+        /// Creates a pipeline filter.
+        /// </summary>
+        /// <returns>A configured pipeline filter.</returns>
+        IPipelineFilter<NosPackageInfo> IPipelineFilterFactory<NosPackageInfo>.Create()
+        {
+            return new PipelineFilter(_decoder, _sessionRefHolder, _requestFilters, _pipelineConfiguration.UseDelimiter);
+        }
 
-            pipeline.AddLast(_decoder);
-            _clientSession.RegisterChannel(_channel);
-            pipeline.AddLast(_clientSession);
-            pipeline.AddLast(_encoder);
+        /// <summary>
+        /// Handles a session connection event.
+        /// </summary>
+        /// <param name="session">The connected session.</param>
+        public void OnSessionConnected(IAppSession session)
+        {
+            var client = _clientFactory();
+            client.RegisterChannel(new NetworkChannel(session));
+            _clientsBySession[session.SessionID] = client;
+        }
+
+        /// <summary>
+        /// Handles a session disconnection event.
+        /// </summary>
+        /// <param name="session">The disconnected session.</param>
+        public void OnSessionClosed(IAppSession session)
+        {
+            _filtersByConnection.TryRemove(session.Connection, out _);
+            if (_clientsBySession.TryRemove(session.SessionID, out var client))
+            {
+                _disconnectHandler?.Invoke(client);
+            }
+        }
+
+        /// <summary>
+        /// Handles an incoming packet.
+        /// </summary>
+        /// <param name="session">The session that received the packet.</param>
+        /// <param name="package">The received package.</param>
+        public void HandlePackage(IAppSession session, NosPackageInfo package)
+        {
+            if (_clientsBySession.TryGetValue(session.SessionID, out var client))
+            {
+                _packetHandler(package, client);
+            }
+            else if (_logger != null && _logLanguage != null)
+            {
+                _logger.LogWarning(_logLanguage[LogLanguageKey.ERROR_SESSIONID], session.SessionID);
+            }
         }
     }
 }
