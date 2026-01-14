@@ -18,5 +18,13 @@ namespace NosCore.Networking.SessionRef
         /// </summary>
         /// <returns>A new session identifier.</returns>
         public int GenerateSessionId();
+
+        /// <summary>
+        /// Attempts to remove and return the value with the specified key.
+        /// </summary>
+        /// <param name="key">The key of the element to remove.</param>
+        /// <param name="value">The removed value, if found.</param>
+        /// <returns>true if the element was removed successfully; otherwise, false.</returns>
+        public bool TryRemove(string key, out RegionTypeMapping? value);
     }
 }

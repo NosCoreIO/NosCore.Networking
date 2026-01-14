@@ -132,4 +132,7 @@
   <data name="FORCED_DISCONNECTION" xml:space="preserve">
     <value>Zwangsabmeldung vom Client {0}, zu viele bestehende Verbindungen.</value>
   </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Beschädigtes Paket: {0} - {1}</value>
+  </data>
 </root>

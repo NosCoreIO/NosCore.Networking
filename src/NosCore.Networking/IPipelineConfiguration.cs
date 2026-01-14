@@ -4,6 +4,8 @@
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
+using NosCore.Shared.Enumerations;
+
 namespace NosCore.Networking;
 
 /// <summary>
@@ -15,4 +17,9 @@ public interface IPipelineConfiguration
     /// Gets or sets a value indicating whether to use frame delimiters in the pipeline.
     /// </summary>
     public bool UseDelimiter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the region type for encoding/decoding.
+    /// </summary>
+    public RegionType Language { get; set; }
 }

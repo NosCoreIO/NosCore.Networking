@@ -4,9 +4,7 @@
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
-using System;
 using System.Collections.Generic;
-using DotNetty.Transport.Channels;
 using NosCore.Packets.Interfaces;
 
 namespace NosCore.Networking.Encoding
@@ -14,7 +12,7 @@ namespace NosCore.Networking.Encoding
     /// <summary>
     /// Defines a packet encoder that converts packets to byte arrays for transmission.
     /// </summary>
-    public interface IEncoder : IChannelHandler
+    public interface IEncoder
     {
         /// <summary>
         /// Encodes a collection of packets into a byte array.

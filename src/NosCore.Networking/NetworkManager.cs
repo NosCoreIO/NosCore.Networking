@@ -5,16 +5,21 @@
 // -----------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using DotNetty.Transport.Bootstrapping;
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NosCore.Networking.Filters;
 using NosCore.Networking.Resource;
 using NosCore.Shared.Configuration;
 using NosCore.Shared.I18N;
+using Serilog;
+using SuperSocket.ProtoBase;
+using SuperSocket.Server.Abstractions;
+using SuperSocket.Server.Host;
 
 namespace NosCore.Networking
 {
@@ -25,17 +30,20 @@ namespace NosCore.Networking
     {
         private readonly IOptions<ServerConfiguration> _configuration;
         private readonly ILogger<NetworkManager> _logger;
-        private readonly Func<ISocketChannel, IPipelineFactory> _pipelineFactory;
+        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
+        private readonly PipelineFactory _pipelineFactory;
+
+        private static readonly AutoResetEvent ClosingEvent = new AutoResetEvent(false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkManager"/> class.
         /// </summary>
         /// <param name="configuration">The server configuration options.</param>
-        /// <param name="pipelineFactory">Factory function for creating pipeline instances per channel.</param>
+        /// <param name="pipelineFactory">Factory for creating pipeline filters.</param>
         /// <param name="logger">The logger instance.</param>
         /// <param name="logLanguage">The localized log language provider.</param>
         public NetworkManager(IOptions<ServerConfiguration> configuration,
-            Func<ISocketChannel, IPipelineFactory> pipelineFactory, ILogger<NetworkManager> logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
+            PipelineFactory pipelineFactory, ILogger<NetworkManager> logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
         {
             _configuration = configuration;
             _pipelineFactory = pipelineFactory;
@@ -43,44 +51,67 @@ namespace NosCore.Networking
             _logLanguage = logLanguage;
         }
 
-        private static readonly AutoResetEvent ClosingEvent = new AutoResetEvent(false);
-        private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
-
         /// <summary>
         /// Starts and runs the network server, listening for incoming client connections.
         /// </summary>
         /// <returns>A task representing the asynchronous server operation.</returns>
         public async Task RunServerAsync()
         {
-            var bossGroup = new MultithreadEventLoopGroup(1);
-            var workerGroup = new MultithreadEventLoopGroup();
-
             try
             {
-                var bootstrap = new ServerBootstrap();
-                bootstrap
-                    .Group(bossGroup, workerGroup)
-                    .Channel<TcpServerSocketChannel>()
-                    .ChildHandler(new ActionChannelInitializer<ISocketChannel>(channel =>
-                        _pipelineFactory(channel).CreatePipeline()));
+                var host = SuperSocketHostBuilder.Create<NosPackageInfo, PipelineFilter>()
+                    .UsePackageHandler(async (session, package) =>
+                    {
+                        _pipelineFactory.HandlePackage(session, package);
+                        await Task.CompletedTask.ConfigureAwait(false);
+                    })
+                    .UseSessionHandler(
+                        async session =>
+                        {
+                            _pipelineFactory.OnSessionConnected(session);
+                            await Task.CompletedTask.ConfigureAwait(false);
+                        },
+                        async (session, e) =>
+                        {
+                            _pipelineFactory.OnSessionClosed(session);
+                            await Task.CompletedTask.ConfigureAwait(false);
+                        })
+                    .ConfigureSuperSocket(options =>
+                    {
+                        options.Name = "NosCore";
+                        options.Listeners = new List<ListenOptions>
+                        {
+                            new ListenOptions
+                            {
+                                Ip = "Any",
+                                Port = _configuration.Value.Port
+                            }
+                        };
+                    })
+                    .ConfigureLogging((context, logging) =>
+                    {
+                        logging.ClearProviders();
+                        logging.AddSerilog();
+                    })
+                    .ConfigureServices((context, services) =>
+                    {
+                        services.AddSingleton<IPipelineFilterFactory<NosPackageInfo>>(_pipelineFactory);
+                    })
+                    .Build();
 
                 _logger.LogInformation(_logLanguage[LogLanguageKey.LISTENING_PORT], _configuration.Value.Port);
-                var bootstrapChannel = await bootstrap.BindAsync(_configuration.Value.Port).ConfigureAwait(false);
+                await host.StartAsync().ConfigureAwait(false);
                 Console.CancelKeyPress += ((s, a) =>
                 {
                     ClosingEvent.Set();
                 });
                 ClosingEvent.WaitOne();
 
-                await bootstrapChannel.CloseAsync().ConfigureAwait(false);
+                await host.StopAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                await Task.WhenAll(bossGroup.ShutdownGracefullyAsync(), workerGroup.ShutdownGracefullyAsync()).ConfigureAwait(false);
             }
         }
     }

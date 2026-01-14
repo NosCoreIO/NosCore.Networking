@@ -19,7 +19,7 @@ namespace NosCore.Networking.Resource {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class LocalizedResources {
@@ -79,6 +79,15 @@ namespace NosCore.Networking.Resource {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Corrupted packet received: {0} - {1}.
+        /// </summary>
+        public static string CORRUPTED_PACKET {
+            get {
+                return ResourceManager.GetString("CORRUPTED_PACKET", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Encode Error: {0}.
         /// </summary>
         public static string ENCODE_ERROR {
@@ -93,6 +102,15 @@ namespace NosCore.Networking.Resource {
         public static string ERROR_DECODING {
             get {
                 return ResourceManager.GetString("ERROR_DECODING", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid session ID: {0}.
+        /// </summary>
+        public static string ERROR_SESSIONID {
+            get {
+                return ResourceManager.GetString("ERROR_SESSIONID", resourceCulture);
             }
         }
         
@@ -120,6 +138,15 @@ namespace NosCore.Networking.Resource {
         public static string SENDING_INVALID_PACKET {
             get {
                 return ResourceManager.GetString("SENDING_INVALID_PACKET", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to broadcast to session {0}.
+        /// </summary>
+        public static string BROADCAST_ERROR {
+            get {
+                return ResourceManager.GetString("BROADCAST_ERROR", resourceCulture);
             }
         }
     }

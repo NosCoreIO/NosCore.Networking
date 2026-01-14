@@ -24,4 +24,17 @@ public class SessionRefHolder : ConcurrentDictionary<string, RegionTypeMapping>,
         _sessionCounter += 2;
         return _sessionCounter;
     }
+
+    /// <summary>
+    /// Attempts to remove and return the value with the specified key.
+    /// </summary>
+    /// <param name="key">The key of the element to remove.</param>
+    /// <param name="value">The removed value, if found.</param>
+    /// <returns>true if the element was removed successfully; otherwise, false.</returns>
+    public new bool TryRemove(string key, out RegionTypeMapping? value)
+    {
+        var result = base.TryRemove(key, out var baseValue);
+        value = baseValue;
+        return result;
+    }
 }

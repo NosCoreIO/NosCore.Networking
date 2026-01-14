@@ -132,4 +132,10 @@
   <data name="LISTENING_PORT" xml:space="preserve">
     <value>{0} Portu Dinleniyor</value>
   </data>
+  <data name="ERROR_SESSIONID" xml:space="preserve">
+    <value>Geçersiz oturum kimliği: {0}</value>
+  </data>
+  <data name="CORRUPTED_PACKET" xml:space="preserve">
+    <value>Bozuk paket: {0} - {1}</value>
+  </data>
 </root>

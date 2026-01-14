@@ -1,38 +1,35 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Groups;
-
 namespace NosCore.Networking.SessionGroup.ChannelMatcher
 {
     /// <summary>
-    /// A channel matcher that matches only a specific channel by its identifier.
+    /// A session matcher that matches only a specific session by its identifier.
     /// </summary>
-    public class Only : IChannelMatcher
+    public class Only : ISessionMatcher
     {
-        private readonly IChannelId _id;
+        private readonly string _id;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Only"/> class.
         /// </summary>
-        /// <param name="id">The channel identifier to match.</param>
-        public Only(IChannelId id)
+        /// <param name="id">The session identifier to match.</param>
+        public Only(string id)
         {
             _id = id;
         }
 
         /// <summary>
-        /// Determines whether the specified channel matches the target channel.
+        /// Determines whether the specified session matches the target session.
         /// </summary>
-        /// <param name="channel">The channel to test.</param>
-        /// <returns>True if the channel matches; otherwise, false.</returns>
-        public bool Matches(IChannel channel)
+        /// <param name="sessionId">The session to test.</param>
+        /// <returns>True if the session matches; otherwise, false.</returns>
+        public bool Matches(string sessionId)
         {
-            return channel.Id == _id;
+            return sessionId == _id;
         }
     }
 }

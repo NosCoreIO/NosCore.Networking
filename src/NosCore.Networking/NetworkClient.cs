@@ -1,4 +1,4 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
@@ -8,10 +8,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
+using NosCore.Networking.Encoding;
 using NosCore.Networking.Resource;
 using NosCore.Packets.Interfaces;
 using NosCore.Shared.I18N;
@@ -20,30 +18,35 @@ using Serilog;
 namespace NosCore.Networking
 {
     /// <summary>
-    /// Represents a network client that manages packet communication and handles channel events.
+    /// Represents a network client that manages packet communication and handles session events.
     /// </summary>
-    public class NetworkClient : ChannelHandlerAdapter, INetworkClient
+    public class NetworkClient : INetworkClient
     {
         private const short MaxPacketsBuffer = 50;
         private readonly ILogger _logger;
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
+        private readonly IEncoder _encoder;
+        private IChannel? _channel;
+        private string _sessionKey = string.Empty;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkClient"/> class.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
         /// <param name="logLanguage">The localized log language provider.</param>
-        public NetworkClient(ILogger logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage)
+        /// <param name="encoder">The packet encoder.</param>
+        public NetworkClient(ILogger logger, ILogLanguageLocalizer<LogLanguageKey> logLanguage, IEncoder encoder)
         {
             _logger = logger;
-            LastPackets = new ConcurrentQueue<IPacket?>();
             _logLanguage = logLanguage;
+            _encoder = encoder;
+            LastPackets = new ConcurrentQueue<IPacket?>();
         }
 
         /// <summary>
-        /// Gets the communication channel associated with this client.
+        /// Gets the unique session key for this client (used for encoding/decoding).
         /// </summary>
-        public IChannel? Channel { get; private set; }
+        public string SessionKey => _sessionKey;
 
         /// <summary>
         /// Gets or sets a value indicating whether the client has selected a character.
@@ -66,16 +69,32 @@ namespace NosCore.Networking
         public ConcurrentQueue<IPacket?> LastPackets { get; }
 
         /// <summary>
+        /// Gets the communication channel associated with this client.
+        /// </summary>
+        public IChannel? Channel => _channel;
+
+        /// <summary>
+        /// Registers a channel with this network client.
+        /// </summary>
+        /// <param name="channel">The channel to register.</param>
+        public void RegisterChannel(IChannel channel)
+        {
+            _channel = channel;
+            _sessionKey = channel.Id;
+            NetworkClientRegistry.Register(this);
+        }
+
+        /// <summary>
         /// Disconnects the client asynchronously.
         /// </summary>
         /// <returns>A task representing the asynchronous disconnect operation.</returns>
         public async Task DisconnectAsync()
         {
-            _logger.Information(_logLanguage[LogLanguageKey.FORCED_DISCONNECTION],
-                SessionId);
-            if (Channel != null)
+            _logger.Information(_logLanguage[LogLanguageKey.FORCED_DISCONNECTION], SessionId);
+            NetworkClientRegistry.Unregister(this);
+            if (_channel != null)
             {
-                await Channel.DisconnectAsync();
+                await _channel.DisconnectAsync();
             }
         }
 
@@ -96,74 +115,33 @@ namespace NosCore.Networking
         /// <returns>A task representing the asynchronous send operation.</returns>
         public async Task SendPacketsAsync(IEnumerable<IPacket?> packets)
         {
-            var packetlist = packets.ToList();
-            var packetDefinitions = (packets as IPacket?[] ?? packetlist.ToArray()).Where(c => c != null);
-            if (!packetDefinitions.Any())
+            var packetList = packets.Where(c => c != null).Cast<IPacket>().ToList();
+            if (packetList.Count == 0)
             {
                 return;
             }
 
-
-            await Task.WhenAll(packetlist.Select(packet => Task.Run(() =>
+            foreach (var packet in packetList)
             {
                 if (packet?.IsValid == false)
                 {
                     _logger.Error(_logLanguage[LogLanguageKey.SENDING_INVALID_PACKET], packet.Header, packet.ValidationResult);
                 }
                 LastPackets.Enqueue(packet);
-            }))).ConfigureAwait(false);
-            Parallel.For(0, LastPackets.Count - MaxPacketsBuffer, (_, __) => LastPackets.TryDequeue(out var ___));
-            if (Channel == null)
+            }
+
+            while (LastPackets.Count > MaxPacketsBuffer)
+            {
+                LastPackets.TryDequeue(out _);
+            }
+
+            if (_channel == null)
             {
                 return;
             }
-            await Channel.WriteAndFlushAsync(packetDefinitions).ConfigureAwait(false);
-        }
 
-        /// <summary>
-        /// Registers a socket channel with this network client.
-        /// </summary>
-        /// <param name="channel">The socket channel to register.</param>
-        public void RegisterChannel(ISocketChannel? channel)
-        {
-            Channel = channel;
-        }
-
-        /// <summary>
-        /// Handles exceptions that occur during channel operations.
-        /// </summary>
-        /// <param name="context">The channel handler context.</param>
-        /// <param name="exception">The exception that occurred.</param>
-#pragma warning disable VSTHRD100 // Avoid async void methods
-        public override async void ExceptionCaught(IChannelHandlerContext context, Exception exception)
-#pragma warning restore VSTHRD100 // Avoid async void methods
-        {
-            if ((exception == null) || (context == null))
-            {
-                throw new ArgumentNullException(nameof(exception));
-            }
-
-            if (exception is SocketException sockException)
-            {
-                switch (sockException.SocketErrorCode)
-                {
-                    case SocketError.ConnectionReset:
-                        _logger.Information(
-                            "Client disconnected. ClientId = {SessionId}",
-                            SessionId);
-                        break;
-                    default:
-                        _logger.Fatal(exception.StackTrace ?? "");
-                        break;
-                }
-            }
-            else
-            {
-                _logger.Fatal(exception.StackTrace ?? "");
-            }
-
-            // ReSharper disable once AsyncConverter.AsyncAwaitMayBeElidedHighlighting
-            await context.CloseAsync().ConfigureAwait(false);
+            var encoded = _encoder.Encode(SessionKey, packetList);
+            await _channel.SendAsync(new ReadOnlyMemory<byte>(encoded));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
@@ -7,9 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Extensions;
 using NosCore.Networking.Resource;
@@ -22,7 +19,7 @@ namespace NosCore.Networking.Encoding
     /// <summary>
     /// Encodes packets for login server communication using region-specific encoding.
     /// </summary>
-    public class LoginEncoder : MessageToMessageEncoder<IEnumerable<IPacket>>, IEncoder
+    public class LoginEncoder : IEncoder
     {
         private readonly ILogger<LoginEncoder> _logger;
         private readonly ISerializer _serializer;
@@ -42,18 +39,6 @@ namespace NosCore.Networking.Encoding
             _serializer = serializer;
             _sessionRefHolder = sessionRefHolder;
             _logLanguage = logLanguage;
-        }
-
-        /// <summary>
-        /// Encodes packets into a byte buffer for transmission.
-        /// </summary>
-        /// <param name="context">The channel handler context.</param>
-        /// <param name="message">The packets to encode.</param>
-        /// <param name="output">The output list to add the encoded buffer to.</param>
-        protected override void Encode(IChannelHandlerContext context, IEnumerable<IPacket> message,
-            List<object> output)
-        {
-            output.Add(Unpooled.WrappedBuffer(Encode(context.Channel.Id.AsLongText(), message)));
         }
 
         /// <summary>
