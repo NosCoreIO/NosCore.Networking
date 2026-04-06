@@ -26,7 +26,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="SuperSocket.Server" Version="2.0.2" />
-		<PackageReference Include="SuperSocket.ProtoBase" Version="2.0.2" />
+		<PackageReference Include="SuperSocket.ProtoBase" Version="2.1.0" />
 		<PackageReference Include="NodaTime" Version="3.2.0" />
 		<PackageReference Include="NosCore.Packets" Version="15.0.0" />
 		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
