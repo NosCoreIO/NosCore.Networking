@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(git diff:*)",
+      "Bash(xargs -I{} sh -c 'echo \"\"=== {} ===\"\" && git diff HEAD~5 -- {} | grep -E \"\"^\\\\+.*///\"\" | head -5')",
+      "Bash(git ls-tree:*)",
+      "Bash(while read f)",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(done)",
+      "Bash(git checkout:*)",
+      "Bash(move:*)",
+      "Bash(nuget list:*)",
+      "Bash(dotnet nuget:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(taskkill:*)",
+      "Bash(git stash:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
