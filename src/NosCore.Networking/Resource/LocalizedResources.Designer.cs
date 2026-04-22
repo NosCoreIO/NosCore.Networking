@@ -133,7 +133,7 @@ namespace NosCore.Networking.Resource {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sending an invalid packet: {PacketHeader} {ValidationResult}.
+        ///   Looks up a localized string similar to Sending an invalid packet: header={PacketHeader} type={PacketType} errors=[{ValidationErrors}].
         /// </summary>
         public static string SENDING_INVALID_PACKET {
             get {

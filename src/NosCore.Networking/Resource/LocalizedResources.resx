@@ -136,7 +136,7 @@
     <value>Listening Port {0}</value>
   </data>
   <data name="SENDING_INVALID_PACKET" xml:space="preserve">
-    <value>Sending an invalid packet: {PacketHeader} {ValidationResult}</value>
+    <value>Sending an invalid packet: header={PacketHeader} type={PacketType} errors=[{ValidationErrors}]</value>
   </data>
   <data name="ERROR_SESSIONID" xml:space="preserve">
     <value>Invalid session ID: {0}</value>

@@ -8,9 +8,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using NosCore.Networking.Encoding;
 using NosCore.Networking.Resource;
+using NosCore.Packets.Attributes;
 using NosCore.Packets.Interfaces;
 using NosCore.Shared.I18N;
 using Serilog;
@@ -125,7 +127,25 @@ namespace NosCore.Networking
             {
                 if (packet?.IsValid == false)
                 {
-                    _logger.Error(_logLanguage[LogLanguageKey.SENDING_INVALID_PACKET], packet.Header, packet.ValidationResult);
+                    var packetType = packet.GetType();
+                    var header = packet.Header
+                        ?? packetType.GetCustomAttribute<PacketHeaderAttribute>()?.Identification
+                        ?? "?";
+                    var errors = string.Join("; ", packet.ValidationResult.Select(v =>
+                    {
+                        var members = v.MemberNames.ToList();
+                        if (members.Count == 0)
+                        {
+                            return v.ErrorMessage ?? "validation failed";
+                        }
+                        var rendered = string.Join(",", members.Select(m =>
+                        {
+                            var value = packetType.GetProperty(m)?.GetValue(packet);
+                            return $"{m}={value ?? "null"}";
+                        }));
+                        return $"{rendered}: {v.ErrorMessage ?? "validation failed"}";
+                    }));
+                    _logger.Error(_logLanguage[LogLanguageKey.SENDING_INVALID_PACKET], header, packetType.FullName, errors);
                 }
                 LastPackets.Enqueue(packet);
             }
