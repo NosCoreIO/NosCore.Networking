@@ -136,7 +136,7 @@
     <value>Écoute du port</value>
   </data>
   <data name="SENDING_INVALID_PACKET" xml:space="preserve">
-    <value>Envoi d'un packet invalide: {PacketHeader} {ValidationResult}</value>
+    <value>Envoi d'un packet invalide: header={PacketHeader} type={PacketType} errors=[{ValidationErrors}]</value>
   </data>
   <data name="CORRUPTED_PACKET" xml:space="preserve">
     <value>Paquet corrompu: {0} - {1}</value>
