@@ -10,12 +10,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NosCore.Networking.Encoding;
 using NosCore.Networking.Resource;
 using NosCore.Packets.Attributes;
 using NosCore.Packets.Interfaces;
 using NosCore.Shared.I18N;
-using Serilog;
 
 namespace NosCore.Networking
 {
@@ -92,7 +92,7 @@ namespace NosCore.Networking
         /// <returns>A task representing the asynchronous disconnect operation.</returns>
         public async Task DisconnectAsync()
         {
-            _logger.Information(_logLanguage[LogLanguageKey.FORCED_DISCONNECTION], SessionId);
+            _logger.LogInformation(_logLanguage[LogLanguageKey.FORCED_DISCONNECTION], SessionId);
             NetworkClientRegistry.Unregister(this);
             if (_channel != null)
             {
@@ -145,7 +145,7 @@ namespace NosCore.Networking
                         }));
                         return $"{rendered}: {v.ErrorMessage ?? "validation failed"}";
                     }));
-                    _logger.Error(_logLanguage[LogLanguageKey.SENDING_INVALID_PACKET], header, packetType.FullName, errors);
+                    _logger.LogError(_logLanguage[LogLanguageKey.SENDING_INVALID_PACKET], header, packetType.FullName, errors);
                 }
                 LastPackets.Enqueue(packet);
             }
@@ -167,7 +167,7 @@ namespace NosCore.Networking
             }
             catch (Exception ex)
             {
-                _logger.Warning(ex, _logLanguage[LogLanguageKey.ENCODE_ERROR], SessionId);
+                _logger.LogWarning(ex, _logLanguage[LogLanguageKey.ENCODE_ERROR], SessionId);
             }
         }
     }
