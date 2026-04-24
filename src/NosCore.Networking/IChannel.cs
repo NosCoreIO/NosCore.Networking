@@ -20,6 +20,12 @@ namespace NosCore.Networking
         string Id { get; }
 
         /// <summary>
+        /// Gets the remote peer's IP address as a string, or null if the
+        /// underlying session has no routable endpoint yet.
+        /// </summary>
+        string? RemoteAddress { get; }
+
+        /// <summary>
         /// Disconnects the channel asynchronously.
         /// </summary>
         /// <returns>A task representing the asynchronous disconnect operation.</returns>

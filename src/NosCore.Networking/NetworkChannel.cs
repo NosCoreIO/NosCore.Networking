@@ -5,6 +5,7 @@
 // -----------------------------------
 
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using SuperSocket.Connection;
 using SuperSocket.Server.Abstractions.Session;
@@ -31,6 +32,12 @@ namespace NosCore.Networking
         /// Gets the unique identifier for this channel.
         /// </summary>
         public string Id => _session.SessionID;
+
+        /// <summary>
+        /// Gets the remote peer's IP address as a string, or null if the
+        /// underlying session has no routable endpoint yet.
+        /// </summary>
+        public string? RemoteAddress => (_session.RemoteEndPoint as IPEndPoint)?.Address.ToString();
 
         /// <summary>
         /// Disconnects the channel asynchronously.
