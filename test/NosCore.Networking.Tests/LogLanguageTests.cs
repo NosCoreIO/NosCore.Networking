@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,9 @@ namespace NosCore.Networking.Tests
 
         public LogLanguageTests()
         {
+            // I18NTestHelpers resolves the repo root relative to the current directory,
+            // assuming the legacy test-runner behavior of running from the project folder.
+            Environment.CurrentDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
             var factory =
                 new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()),
                     new LoggerFactory());
