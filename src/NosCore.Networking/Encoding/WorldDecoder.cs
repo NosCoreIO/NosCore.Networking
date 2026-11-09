@@ -26,8 +26,6 @@ namespace NosCore.Networking.Encoding
     {
         private readonly IDeserializer _deserializer;
         private readonly ILogger<WorldDecoder> _logger;
-        private RegionType _region;
-        private int _sessionId;
         private readonly ISessionRefHolder _sessionRefHolder;
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
 
@@ -46,7 +44,7 @@ namespace NosCore.Networking.Encoding
             _logLanguage = logLanguage;
         }
 
-        private string DecryptPrivate(string str)
+        private static string DecryptPrivate(string str, RegionType region)
         {
             var receiveData = new List<byte>();
             char[] table = { ' ', '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'n' };
@@ -104,7 +102,7 @@ namespace NosCore.Networking.Encoding
                 }
             }
 
-            return _region.GetEncoding()!.GetString(receiveData.ToArray());
+            return region.GetEncoding()!.GetString(receiveData.ToArray());
         }
 
         private static string DecryptCustomParameter(byte[] str, out byte[] endOfPacket)
@@ -191,23 +189,23 @@ namespace NosCore.Networking.Encoding
             var temp = new List<IPacket>();
             var encryptedString = "";
             var mapper = _sessionRefHolder[clientSessionId];
-            _region = mapper.RegionType;
-            _sessionId = mapper.SessionId;
+            var region = mapper.RegionType;
+            var sessionId = mapper.SessionId;
             var str = message.ToArray();
-            if (_sessionId == 0)
+            if (sessionId == 0)
             {
                 if (_deserializer.Deserialize(DecryptCustomParameter(str, out var endofPacket)) is not UnresolvedPacket pack)
                 {
                     throw new ArgumentNullException(nameof(clientSessionId));
                 }
 
-                if (!int.TryParse(pack.Header, out _sessionId))
+                if (!int.TryParse(pack.Header, out sessionId))
                 {
                     _logger.LogError(_logLanguage[LogLanguageKey.ERROR_SESSIONID], mapper.SessionId);
                     return Enumerable.Empty<IPacket>();
                 }
 
-                _sessionRefHolder[clientSessionId].SessionId = _sessionId;
+                _sessionRefHolder[clientSessionId].SessionId = sessionId;
                 _logger.LogInformation(_logLanguage[LogLanguageKey.CLIENT_CONNECTED], mapper.SessionId);
                 temp.Add(pack);
                 if (endofPacket.Length == 0)
@@ -220,8 +218,8 @@ namespace NosCore.Networking.Encoding
 
             if (continueToDecode)
             {
-                var sessionKey = _sessionId & 0xFF;
-                var sessionNumber = unchecked((byte)(_sessionId >> 6));
+                var sessionKey = sessionId & 0xFF;
+                var sessionNumber = unchecked((byte)(sessionId >> 6));
                 sessionNumber &= 0xFF;
                 sessionNumber &= unchecked((byte)0x80000003);
 
@@ -268,7 +266,7 @@ namespace NosCore.Networking.Encoding
                 {
                     try
                     {
-                        var decrypt = DecryptPrivate(p);
+                        var decrypt = DecryptPrivate(p, region);
                         var packet = _deserializer.Deserialize(decrypt);
                         if (!packet.IsValid)
                         {
