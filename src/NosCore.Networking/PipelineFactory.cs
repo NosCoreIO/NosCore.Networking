@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NosCore.Networking.Encoding;
 using NosCore.Networking.Encoding.Filter;
@@ -30,7 +31,7 @@ namespace NosCore.Networking
         private readonly IEnumerable<IRequestFilter> _requestFilters;
         private readonly IPipelineConfiguration _pipelineConfiguration;
         private readonly Func<INetworkClient> _clientFactory;
-        private readonly Action<NosPackageInfo, INetworkClient> _packetHandler;
+        private readonly Func<NosPackageInfo, INetworkClient, Task> _packetHandler;
         private readonly Action<INetworkClient>? _disconnectHandler;
         private readonly ILogger<PipelineFactory>? _logger;
         private readonly ILogLanguageLocalizer<LogLanguageKey>? _logLanguage;
@@ -53,6 +54,33 @@ namespace NosCore.Networking
         public PipelineFactory(IDecoder decoder, ISessionRefHolder sessionRefHolder,
             IEnumerable<IRequestFilter> requestFilters, IPipelineConfiguration pipelineConfiguration,
             Func<INetworkClient> clientFactory, Action<NosPackageInfo, INetworkClient> packetHandler,
+            Action<INetworkClient>? disconnectHandler = null,
+            ILogger<PipelineFactory>? logger = null, ILogLanguageLocalizer<LogLanguageKey>? logLanguage = null)
+            : this(decoder, sessionRefHolder, requestFilters, pipelineConfiguration, clientFactory,
+                (package, client) =>
+                {
+                    packetHandler(package, client);
+                    return Task.CompletedTask;
+                }, disconnectHandler, logger, logLanguage)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PipelineFactory"/> class with a packet handler
+        /// that is awaited, so a session's next frame is read only once the current one is handled.
+        /// </summary>
+        /// <param name="decoder">The decoder for incoming packets.</param>
+        /// <param name="sessionRefHolder">The session reference holder.</param>
+        /// <param name="requestFilters">The collection of request filters to apply.</param>
+        /// <param name="pipelineConfiguration">The pipeline configuration settings.</param>
+        /// <param name="clientFactory">Factory function to create network client instances.</param>
+        /// <param name="packetHandler">Handler for processing received packets, awaited per frame.</param>
+        /// <param name="disconnectHandler">Handler for processing client disconnections.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="logLanguage">The localized log language provider.</param>
+        public PipelineFactory(IDecoder decoder, ISessionRefHolder sessionRefHolder,
+            IEnumerable<IRequestFilter> requestFilters, IPipelineConfiguration pipelineConfiguration,
+            Func<INetworkClient> clientFactory, Func<NosPackageInfo, INetworkClient, Task> packetHandler,
             Action<INetworkClient>? disconnectHandler = null,
             ILogger<PipelineFactory>? logger = null, ILogLanguageLocalizer<LogLanguageKey>? logLanguage = null)
         {
@@ -115,20 +143,30 @@ namespace NosCore.Networking
         }
 
         /// <summary>
+        /// Handles an incoming packet without waiting for the handler to finish.
+        /// </summary>
+        /// <param name="session">The session that received the packet.</param>
+        /// <param name="package">The received package.</param>
+        public void HandlePackage(IAppSession session, NosPackageInfo package) => _ = HandlePackageAsync(session, package);
+
+        /// <summary>
         /// Handles an incoming packet.
         /// </summary>
         /// <param name="session">The session that received the packet.</param>
         /// <param name="package">The received package.</param>
-        public void HandlePackage(IAppSession session, NosPackageInfo package)
+        /// <returns>A task that completes once the packet handler has finished with the packet.</returns>
+        public Task HandlePackageAsync(IAppSession session, NosPackageInfo package)
         {
             if (_clientsBySession.TryGetValue(session.SessionID, out var client))
             {
-                _packetHandler(package, client);
+                return _packetHandler(package, client);
             }
             else if (_logger != null && _logLanguage != null)
             {
                 _logger.LogWarning(_logLanguage[LogLanguageKey.ERROR_SESSIONID], session.SessionID);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

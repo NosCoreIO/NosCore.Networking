@@ -62,8 +62,7 @@ namespace NosCore.Networking
                 var host = SuperSocketHostBuilder.Create<NosPackageInfo, PipelineFilter>()
                     .UsePackageHandler(async (session, package) =>
                     {
-                        _pipelineFactory.HandlePackage(session, package);
-                        await Task.CompletedTask.ConfigureAwait(false);
+                        await _pipelineFactory.HandlePackageAsync(session, package);
                     })
                     .UseSessionHandler(
                         async session =>
