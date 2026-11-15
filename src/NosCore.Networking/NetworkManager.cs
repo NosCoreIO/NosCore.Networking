@@ -1,4 +1,4 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
@@ -33,8 +33,6 @@ namespace NosCore.Networking
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
         private readonly PipelineFactory _pipelineFactory;
 
-        private static readonly AutoResetEvent ClosingEvent = new AutoResetEvent(false);
-
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkManager"/> class.
         /// </summary>
@@ -52,14 +50,21 @@ namespace NosCore.Networking
         }
 
         /// <summary>
-        /// Starts and runs the network server, listening for incoming client connections.
+        /// Starts the network server and keeps it listening until the process is asked to shut down.
         /// </summary>
-        /// <returns>A task representing the asynchronous server operation.</returns>
-        public async Task RunServerAsync()
+        /// <returns>A task that completes once the server has stopped.</returns>
+        public Task RunServerAsync() => RunServerAsync(CancellationToken.None);
+
+        /// <summary>
+        /// Starts the network server and keeps it listening until <paramref name="stoppingToken"/> is cancelled or the process is asked to shut down.
+        /// </summary>
+        /// <param name="stoppingToken">Stops the server when cancelled.</param>
+        /// <returns>A task that completes once the server has stopped.</returns>
+        public async Task RunServerAsync(CancellationToken stoppingToken)
         {
             try
             {
-                var host = SuperSocketHostBuilder.Create<NosPackageInfo, PipelineFilter>()
+                using var host = SuperSocketHostBuilder.Create<NosPackageInfo, PipelineFilter>()
                     .UsePackageHandler(async (session, package) =>
                     {
                         await _pipelineFactory.HandlePackageAsync(session, package);
@@ -99,14 +104,8 @@ namespace NosCore.Networking
                     .Build();
 
                 _logger.LogInformation(_logLanguage[LogLanguageKey.LISTENING_PORT], _configuration.Value.Port);
-                await host.StartAsync().ConfigureAwait(false);
-                Console.CancelKeyPress += ((s, a) =>
-                {
-                    ClosingEvent.Set();
-                });
-                ClosingEvent.WaitOne();
-
-                await host.StopAsync().ConfigureAwait(false);
+                await host.StartAsync(stoppingToken);
+                await host.WaitForShutdownAsync(stoppingToken);
             }
             catch (Exception ex)
             {
