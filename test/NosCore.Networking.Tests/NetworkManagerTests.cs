@@ -43,7 +43,11 @@ namespace NosCore.Networking.Tests
             using var cts = new CancellationTokenSource();
 
             var running = manager.RunServerAsync(cts.Token);
-            await ConnectAsync(port).WaitAsync(TimeSpan.FromSeconds(10));
+            using (var ready = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            {
+                await ConnectAsync(port, ready.Token);
+            }
+
             cts.Cancel();
 
             await running.WaitAsync(TimeSpan.FromSeconds(10));
@@ -51,19 +55,19 @@ namespace NosCore.Networking.Tests
             await Assert.ThrowsAsync<SocketException>(() => afterStop.ConnectAsync(IPAddress.Loopback, port));
         }
 
-        private static async Task ConnectAsync(ushort port)
+        private static async Task ConnectAsync(ushort port, CancellationToken cancellationToken)
         {
             while (true)
             {
                 using var client = new TcpClient();
                 try
                 {
-                    await client.ConnectAsync(IPAddress.Loopback, port);
+                    await client.ConnectAsync(IPAddress.Loopback, port, cancellationToken);
                     return;
                 }
                 catch (SocketException)
                 {
-                    await Task.Delay(50);
+                    await Task.Delay(50, cancellationToken);
                 }
             }
         }

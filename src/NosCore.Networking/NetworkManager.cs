@@ -50,13 +50,13 @@ namespace NosCore.Networking
         }
 
         /// <summary>
-        /// Starts the network server and keeps it listening until the process exits.
+        /// Starts the network server and keeps it listening until the process is asked to shut down.
         /// </summary>
-        /// <returns>A task that never completes while the server is listening.</returns>
+        /// <returns>A task that completes once the server has stopped.</returns>
         public Task RunServerAsync() => RunServerAsync(CancellationToken.None);
 
         /// <summary>
-        /// Starts the network server and keeps it listening until <paramref name="stoppingToken"/> is cancelled.
+        /// Starts the network server and keeps it listening until <paramref name="stoppingToken"/> is cancelled or the process is asked to shut down.
         /// </summary>
         /// <param name="stoppingToken">Stops the server when cancelled.</param>
         /// <returns>A task that completes once the server has stopped.</returns>
@@ -64,7 +64,7 @@ namespace NosCore.Networking
         {
             try
             {
-                var host = SuperSocketHostBuilder.Create<NosPackageInfo, PipelineFilter>()
+                using var host = SuperSocketHostBuilder.Create<NosPackageInfo, PipelineFilter>()
                     .UsePackageHandler(async (session, package) =>
                     {
                         await _pipelineFactory.HandlePackageAsync(session, package);
@@ -105,15 +105,7 @@ namespace NosCore.Networking
 
                 _logger.LogInformation(_logLanguage[LogLanguageKey.LISTENING_PORT], _configuration.Value.Port);
                 await host.StartAsync(stoppingToken);
-                try
-                {
-                    await Task.Delay(System.Threading.Timeout.Infinite, stoppingToken);
-                }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                }
-
-                await host.StopAsync(CancellationToken.None);
+                await host.WaitForShutdownAsync(stoppingToken);
             }
             catch (Exception ex)
             {
