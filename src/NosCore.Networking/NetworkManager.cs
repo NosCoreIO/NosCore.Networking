@@ -1,4 +1,4 @@
-﻿//  __  _  __    __   ___ __  ___ ___
+//  __  _  __    __   ___ __  ___ ___
 // |  \| |/__\ /' _/ / _//__\| _ \ __|
 // | | ' | \/ |`._`.| \_| \/ | v / _|
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
@@ -33,8 +33,6 @@ namespace NosCore.Networking
         private readonly ILogLanguageLocalizer<LogLanguageKey> _logLanguage;
         private readonly PipelineFactory _pipelineFactory;
 
-        private static readonly AutoResetEvent ClosingEvent = new AutoResetEvent(false);
-
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkManager"/> class.
         /// </summary>
@@ -52,10 +50,17 @@ namespace NosCore.Networking
         }
 
         /// <summary>
-        /// Starts and runs the network server, listening for incoming client connections.
+        /// Starts the network server and keeps it listening until the process exits.
         /// </summary>
-        /// <returns>A task representing the asynchronous server operation.</returns>
-        public async Task RunServerAsync()
+        /// <returns>A task that never completes while the server is listening.</returns>
+        public Task RunServerAsync() => RunServerAsync(CancellationToken.None);
+
+        /// <summary>
+        /// Starts the network server and keeps it listening until <paramref name="stoppingToken"/> is cancelled.
+        /// </summary>
+        /// <param name="stoppingToken">Stops the server when cancelled.</param>
+        /// <returns>A task that completes once the server has stopped.</returns>
+        public async Task RunServerAsync(CancellationToken stoppingToken)
         {
             try
             {
@@ -99,14 +104,16 @@ namespace NosCore.Networking
                     .Build();
 
                 _logger.LogInformation(_logLanguage[LogLanguageKey.LISTENING_PORT], _configuration.Value.Port);
-                await host.StartAsync().ConfigureAwait(false);
-                Console.CancelKeyPress += ((s, a) =>
+                await host.StartAsync(stoppingToken);
+                try
                 {
-                    ClosingEvent.Set();
-                });
-                ClosingEvent.WaitOne();
+                    await Task.Delay(System.Threading.Timeout.Infinite, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                }
 
-                await host.StopAsync().ConfigureAwait(false);
+                await host.StopAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
