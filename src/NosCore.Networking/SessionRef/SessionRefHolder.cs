@@ -4,25 +4,57 @@
 // |_|\__|\__/ |___/ \__/\__/|_|_\___|
 // -----------------------------------
 
+using System;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Threading;
 
 namespace NosCore.Networking.SessionRef;
 
 /// <summary>
-/// Manages session references and generates unique session identifiers in a thread-safe manner.
+/// Manages session references and generates session identifiers that are unique and cannot be guessed.
 /// </summary>
 public class SessionRefHolder : ConcurrentDictionary<string, RegionTypeMapping>, ISessionRefHolder
 {
+    private const int IdBits = 30;
+    private const int HalfBits = IdBits / 2;
+    private const uint HalfMask = (1u << HalfBits) - 1;
+    private const int Rounds = 4;
+
+    private readonly byte[] _key = RandomNumberGenerator.GetBytes(32);
     private int _sessionCounter;
 
     /// <summary>
-    /// Generates a new unique session identifier.
+    /// Generates a new session identifier.
     /// </summary>
-    /// <returns>A new session identifier incremented by 2.</returns>
+    /// <returns>A positive identifier, unique for the next 2^30 calls and not predictable from earlier ones.</returns>
     public int GenerateSessionId()
     {
-        return Interlocked.Add(ref _sessionCounter, 2);
+        // A world entry is checked against this identifier, so it must not be predictable, and the master tells
+        // players apart by it, so it must not repeat. A keyed permutation of a counter gives both.
+        // Zero means "no session yet" to the decoders.
+        var count = (uint)Interlocked.Increment(ref _sessionCounter) & ((1u << IdBits) - 1);
+        return (int)Permute(count) + 1;
+    }
+
+    private uint Permute(uint value)
+    {
+        var left = value >> HalfBits;
+        var right = value & HalfMask;
+        Span<byte> input = stackalloc byte[5];
+        Span<byte> hash = stackalloc byte[32];
+        for (byte round = 0; round < Rounds; round++)
+        {
+            input[0] = round;
+            BinaryPrimitives.WriteUInt32LittleEndian(input[1..], right);
+            HMACSHA256.HashData(_key, input, hash);
+            var next = left ^ (BinaryPrimitives.ReadUInt32LittleEndian(hash) & HalfMask);
+            left = right;
+            right = next;
+        }
+
+        return (left << HalfBits) | right;
     }
 
     /// <summary>
